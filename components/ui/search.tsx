@@ -57,7 +57,7 @@ function SubjectSelector() {
     const subject = convertRawToSubject(item);
     addSubject(subject);
     console.log(subject);
-    setSearchText(""); // Clear input
+    setSearchText(""); 
   };
 
   const filteredList =
