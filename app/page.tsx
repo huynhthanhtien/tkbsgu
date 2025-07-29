@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 // import { useSubjects } from "@/hooks/useSubjects";
 
 
-import { ClassInfo, ScheduleItem, Subject } from "@/components/types"
+import { ClassInfo, ScheduleItem } from "@/components/types"
 import SubjectSelector from "@/components/ui/search";
 import { useSubjects } from "@/context/SubjectsContext"
 // Dữ liệu mẫu với nhiều khoảng thời gian cho mỗi lớp
@@ -112,7 +112,7 @@ import { useSubjects } from "@/context/SubjectsContext"
 
 const morningPeriods = [1, 2, 3, 4, 5]
 const afternoonPeriods = [6, 7, 8, 9, 10]
-const periods = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+// const periods = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 const weekDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"]
 
 // Màu sắc cho từng lớp (hỗ trợ dark mode) - Google Calendar style
@@ -153,7 +153,7 @@ const colorClassesHighlight = {
 
 export default function SchedulePlanner() {
 
-  const { selectedSubjects, addSubject, removeSubject, clearAll } = useSubjects();
+  const { selectedSubjects } = useSubjects();
 
   const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({})
   const [draggedSubject, setDraggedSubject] = useState<string | null>(null)

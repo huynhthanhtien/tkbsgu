@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { ClassInfo, Subject, ScheduleItem } from "@/components/types";
+import { Subject } from "@/components/types";
 
 const STORAGE_KEY = "selectedSubjects";
 
