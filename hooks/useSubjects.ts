@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react";
 import { ClassInfo, Subject, ScheduleItem } from "@/components/types";
 
