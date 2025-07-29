@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ClassInfo, Subject } from "@/components/types";
-import rawData from "../../.next/static/data.json";
+import rawData from "@/public/data.json";
 import { useTheme } from "next-themes";
 import { it } from "node:test";
 import { useSubjects } from "@/context/SubjectsContext";
