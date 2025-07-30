@@ -1,8 +1,51 @@
 "use client"
 
-import type React from "react"
 
-import { useState } from "react"
+import type React from "react"
+// Reusable confirmation modal component
+import type { ReactNode } from "react";
+type ConfirmModalProps = {
+  open: boolean;
+  title: ReactNode;
+  description: ReactNode;
+  onCancel: () => void;
+  onConfirm: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  confirmClass?: string;
+};
+function ConfirmModal({ open, title, description, onCancel, onConfirm, confirmText = "Xoá", cancelText = "Huỷ", confirmClass = "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600" }: ConfirmModalProps) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[320px] max-w-[90vw]">
+        <div className="flex items-center gap-2 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-red-600 dark:text-red-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v-.008H12v.008zm9-7.5A9 9 0 11 3 12a9 9 0 0118 0z" />
+          </svg>
+          <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">{title}</div>
+        </div>
+        <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">{description}</div>
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+            onClick={onCancel}
+          >
+            {cancelText}
+          </button>
+          <button
+            className={`px-4 py-2 rounded font-semibold shadow ${confirmClass}`}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+import { useState, useEffect } from "react"
 import { Toaster, toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -213,9 +256,32 @@ export default function SchedulePlanner() {
   }
 
 
-  const { selectedSubjects } = useSubjects();
 
-  const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({})
+  const { selectedSubjects, addSubject, removeSubject } = useSubjects();
+
+  // State for custom confirmation modal
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, subject: any | null }>({ open: false, subject: null });
+
+  const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
+
+  // Khôi phục schedule từ localStorage sau khi client mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('tkb-schedule');
+        if (saved) setSchedule(JSON.parse(saved));
+      } catch { }
+    }
+  }, []);
+
+  // Lưu schedule vào localStorage mỗi khi thay đổi
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('tkb-schedule', JSON.stringify(schedule));
+      } catch { }
+    }
+  }, [schedule]);
   const [draggedSubject, setDraggedSubject] = useState<string | null>(null)
   const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([])
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
@@ -567,8 +633,8 @@ export default function SchedulePlanner() {
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Kéo môn học vào thời khóa biểu để chọn lớp
                   </div>
-                  <div className="overflow-y-auto" style={{ height: "639px" }}>
-                    {selectedSubjects.map((subject) => (
+                  <div className="overflow-y-auto space-y-2">
+                    {[...selectedSubjects].reverse().map((subject) => (
                       <div
                         key={subject.id}
                         draggable
@@ -576,7 +642,44 @@ export default function SchedulePlanner() {
                         onDragEnd={handleDragEnd}
                         className={`p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-move hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 ${draggedSubject === subject.id ? "opacity-50 scale-95" : ""}`}
                       >
-                        <div className="font-medium text-gray-900 dark:text-gray-100">{subject.name}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{subject.name}</div>
+                          <button
+                            className="ml-2 p-1 rounded hover:bg-red-700/20 dark:hover:bg-red-700/30 transition"
+                            title="Xoá tất cả lớp của môn này khỏi thời khoá biểu"
+                            onClick={() => setConfirmDelete({ open: true, subject })}
+                          >
+                            {/* Trash icon */}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-red-700 dark:text-red-300">
+                              <path fillRule="evenodd" d="M7.5 3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4h3.25a.75.75 0 0 1 0 1.5h-.278l-.427 8.12A2.75 2.75 0 0 1 12.3 16.25H7.7a2.75 2.75 0 0 1-2.745-2.63l-.427-8.12H4.25a.75.75 0 0 1 0-1.5H7.5V3Zm1 .5V4h3v-.5h-3Zm-2.18 1.5.42 8.01a1.25 1.25 0 0 0 1.245 1.19h4.6a1.25 1.25 0 0 0 1.245-1.19l.42-8.01H6.32Z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          {/* Confirmation modal for subject deletion (root level) */}
+                          <ConfirmModal
+                            open={confirmDelete.open && !!confirmDelete.subject}
+                            title="Xác nhận xoá môn học"
+                            description={confirmDelete.subject ? (
+                              <span>Bạn có chắc muốn xoá môn <span className="font-bold text-red-600 dark:text-red-400">&apos;{confirmDelete.subject.name}&apos;</span> khỏi danh sách môn học và thời khoá biểu không?</span>
+                            ) : ''}
+                            onCancel={() => setConfirmDelete({ open: false, subject: null })}
+                            onConfirm={() => {
+                              const subject = confirmDelete.subject;
+                              if (!subject) return;
+                              // Xoá khỏi schedule
+                              const newSchedule = { ...schedule };
+                              Object.keys(newSchedule).forEach((key) => {
+                                if (newSchedule[key].subjectId === subject.id) {
+                                  delete newSchedule[key];
+                                }
+                              });
+                              setSchedule(newSchedule);
+                              // Xoá khỏi danh sách môn học nếu context cho phép
+                              removeSubject(subject.id);
+                              toast.success(`Đã xoá môn '${subject.name}' khỏi danh sách và thời khoá biểu!`);
+                              setConfirmDelete({ open: false, subject: null });
+                            }}
+                          />
+                        </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">{subject.code}</div>
                         <div
                           className="text-xs text-gray-500 dark:text-gray-500 mt-2 cursor-pointer select-none"
