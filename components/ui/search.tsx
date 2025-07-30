@@ -65,7 +65,9 @@ function SubjectSelector() {
     searchText.length >= 2
       ? rawData
         .filter((item: any) =>
-          item.ten_mon.toLowerCase().includes(searchText.toLowerCase())
+          // search theo tên môn hoặc mã môn
+          item.ten_mon.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.ma_mon.toLowerCase().includes(searchText.toLowerCase())
         )
         .slice(0, 20)
       : [];
@@ -90,7 +92,7 @@ function SubjectSelector() {
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                   onClick={() => handleAddSubject(item)}
                 >
-                  {item.ten_mon} ({item.ma_mon})
+                  {item.ma_mon} - {item.ten_mon} 
                 </li>
               ))}
             </ul>
