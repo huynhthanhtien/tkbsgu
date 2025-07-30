@@ -633,7 +633,7 @@ export default function SchedulePlanner() {
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Kéo môn học vào thời khóa biểu để chọn lớp
                   </div>
-                  <div className="overflow-y-auto space-y-2">
+                  <div className="overflow-y-auto space-y-2" style={{height:"631px"}}>
                     {[...selectedSubjects].reverse().map((subject) => (
                       <div
                         key={subject.id}
