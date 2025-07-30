@@ -10,6 +10,7 @@ type SubjectContextType = {
   addSubject: (subject: Subject) => void;
   removeSubject: (ma_mon: string) => void;
   clearAll: () => void;
+  setSelectedSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
 };
 
 const SubjectContext = createContext<SubjectContextType | undefined>(undefined);
@@ -48,7 +49,7 @@ export const SubjectProvider = ({ children }: { children: React.ReactNode }) => 
 
   return (
     <SubjectContext.Provider
-      value={{ selectedSubjects, addSubject, removeSubject, clearAll }}
+      value={{ selectedSubjects, addSubject, removeSubject, clearAll, setSelectedSubjects }}
     >
       {children}
     </SubjectContext.Provider>
