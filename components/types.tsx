@@ -2,6 +2,7 @@ export interface Subject{
   id: string,
   name: string,
   code: string,
+  credit: number,
   classes: ClassInfo[]
 }
 
@@ -18,6 +19,7 @@ export interface ScheduleItem {
     teacher: string
     room: string
   }>
+  credit: number
 }
 
 export interface ClassInfo {

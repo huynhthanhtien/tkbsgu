@@ -174,7 +174,7 @@ export default function SchedulePlanner() {
       }
     });
 
-    // Thêm tất cả các ô của lớp mới vào lịch
+    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
     cls.schedules.forEach((classSchedule) => {
       for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
         const scheduleKey = `${classSchedule.day}-${p}`;
@@ -185,6 +185,7 @@ export default function SchedulePlanner() {
           subjectCode: subject.code,
           color: cls.color,
           schedules: cls.schedules,
+          credit: subject.credit ?? 0,
         };
       }
     });
@@ -312,7 +313,7 @@ export default function SchedulePlanner() {
       }
     })
 
-    // Thêm tất cả các ô của lớp mới vào lịch
+    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
     matchingClass.schedules.forEach((classSchedule) => {
       for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
         const scheduleKey = `${classSchedule.day}-${p}`
@@ -323,6 +324,7 @@ export default function SchedulePlanner() {
           subjectCode: subject.code,
           color: matchingClass.color,
           schedules: matchingClass.schedules,
+          credit: subject.credit ?? 0,
         }
       }
     })
@@ -359,7 +361,7 @@ export default function SchedulePlanner() {
       }
     })
 
-    // Thêm tất cả các ô của lớp mới vào lịch
+    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
     cls.schedules.forEach((classSchedule) => {
       for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
         const scheduleKey = `${classSchedule.day}-${p}`
@@ -370,6 +372,7 @@ export default function SchedulePlanner() {
           subjectCode: subject.code,
           color: cls.color,
           schedules: cls.schedules,
+          credit: subject.credit ?? 0,
         }
       }
     })
@@ -867,9 +870,24 @@ export default function SchedulePlanner() {
                 </div>
                 <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {new Set(Object.values(schedule).map((item) => item.classId)).size}
+                    {(() => {
+                      // Lấy các subjectId đã xếp trong schedule
+                      const scheduledSubjectIds = Array.from(new Set(Object.values(schedule).map(item => item.subjectId)));
+                      // Lấy các credit duy nhất từ schedule
+                      const credits = new Set();
+                      let total = 0;
+                      for (const subjectId of scheduledSubjectIds) {
+                        // Tìm 1 block bất kỳ của subjectId này trong schedule
+                        const block = Object.values(schedule).find(item => item.subjectId === subjectId && typeof item.credit === 'number');
+                        if (block && !credits.has(subjectId)) {
+                          total += block.credit;
+                          credits.add(subjectId);
+                        }
+                      }
+                      return total;
+                    })()}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Lớp đã chọn</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Tổng số tín chỉ đã chọn</div>
                 </div>
               </div>
             </CardContent>

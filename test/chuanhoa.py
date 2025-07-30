@@ -38,12 +38,13 @@ def group_subjects_by_ma_mon(data):
             grouped[key] = {
                 "ma_mon": item["ma_mon"],
                 "ten_mon": item["ten_mon"],
+                "so_tc": item["so_tc"],
                 "lop": []
             }
 
         grouped[key]["lop"].append({
             "nhom_to": item["nhom_to"],
-            "so_tc": item["so_tc"],
+            # "so_tc": item["so_tc"],
             "tkb": item["tkb"]
         })
 
