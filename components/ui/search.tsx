@@ -18,6 +18,7 @@ function SubjectSelector() {
     id: item.ma_mon,
     name: item.ten_mon,
     code: item.ma_mon,
+    credit: Number(item.so_tc),
     classes: item.lop.map((lopItem: any): ClassInfo => {
       const scheduleSet = new Set<string>();
       const schedules = lopItem.tkb

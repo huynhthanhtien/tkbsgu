@@ -153,16 +153,71 @@ const colorClassesHighlight = {
 
 export default function SchedulePlanner() {
 
+  // Bổ sung: Chọn lớp từ sidebar bằng click
+  function handleSidebarClassClick(subject: any, cls: ClassInfo) {
+    // Nếu đã chọn lớp này rồi thì không làm gì
+    const isAlreadySelected = Object.values(schedule).some(
+      (item) => item.subjectId === subject.id && item.classId === cls.id
+    );
+    if (isAlreadySelected) return;
+
+    // Kiểm tra nếu có lớp khác của môn này đã được xếp, thì hỏi xác nhận thay thế
+    const hasOtherClass = Object.values(schedule).some(
+      (item) => item.subjectId === subject.id && item.classId !== cls.id
+    );
+
+    // Xóa lớp cũ của môn học này nếu có
+    const newSchedule = { ...schedule };
+    Object.keys(newSchedule).forEach((key) => {
+      if (newSchedule[key].subjectId === subject.id) {
+        delete newSchedule[key];
+      }
+    });
+
+    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
+    cls.schedules.forEach((classSchedule) => {
+      for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
+        const scheduleKey = `${classSchedule.day}-${p}`;
+        newSchedule[scheduleKey] = {
+          subjectId: subject.id,
+          classId: cls.id,
+          subjectName: subject.name,
+          subjectCode: subject.code,
+          color: cls.color,
+          schedules: cls.schedules,
+          credit: subject.credit ?? 0,
+        };
+      }
+    });
+
+    setSchedule(newSchedule);
+    setDraggedSubject(null);
+    setDraggedFromSchedule(null);
+    setAvailableClasses([]);
+    setHoveredSlot(null);
+    setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null });
+  }
+
   const { selectedSubjects } = useSubjects();
 
   const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({})
   const [draggedSubject, setDraggedSubject] = useState<string | null>(null)
   const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([])
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
+
   const [draggedFromSchedule, setDraggedFromSchedule] = useState<{
     subjectId: string
     classId: string
   } | null>(null)
+
+  // Modal chọn lớp khi có nhiều lớp phù hợp
+  const [classSelectionModal, setClassSelectionModal] = useState<{
+    open: boolean,
+    classes: ClassInfo[],
+    day: string,
+    period: number,
+    subject: any | null
+  }>({ open: false, classes: [], day: '', period: 0, subject: null })
 
   const handleDragStart = (e: React.DragEvent, subjectId: string) => {
     setDraggedSubject(subjectId)
@@ -216,14 +271,14 @@ export default function SchedulePlanner() {
     const subject = selectedSubjects.find((s) => s.id === draggedSubject)
     if (!subject) return
 
-    // Tìm lớp có chứa ô này trong lịch học
-    const matchingClass = subject.classes.find((cls) =>
+    // Tìm tất cả lớp có chứa ô này trong lịch học
+    const matchingClasses = subject.classes.filter((cls) =>
       cls.schedules.some(
         (schedule) => schedule.day === day && period >= schedule.startPeriod && period <= schedule.endPeriod,
       ),
     )
 
-    if (!matchingClass) {
+    if (matchingClasses.length === 0) {
       alert(`Môn ${subject.name} không có lớp nào vào ${day}, tiết ${period}`)
       setDraggedSubject(null)
       setDraggedFromSchedule(null)
@@ -231,6 +286,15 @@ export default function SchedulePlanner() {
       setHoveredSlot(null)
       return
     }
+
+    // Nếu có nhiều lớp phù hợp, hỏi người dùng chọn lớp
+    if (matchingClasses.length > 1) {
+      setClassSelectionModal({ open: true, classes: matchingClasses, day, period, subject })
+      return
+    }
+
+    // Nếu chỉ có 1 lớp phù hợp
+    const matchingClass = matchingClasses[0]
 
     // Nếu đang drag từ schedule và chọn cùng lớp, không làm gì
     if (draggedFromSchedule && matchingClass.id === draggedFromSchedule.classId) {
@@ -249,7 +313,7 @@ export default function SchedulePlanner() {
       }
     })
 
-    // Thêm tất cả các ô của lớp mới vào lịch
+    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
     matchingClass.schedules.forEach((classSchedule) => {
       for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
         const scheduleKey = `${classSchedule.day}-${p}`
@@ -258,10 +322,9 @@ export default function SchedulePlanner() {
           classId: matchingClass.id,
           subjectName: subject.name,
           subjectCode: subject.code,
-          // teacher: classSchedule.teacher,
-          // room: classSchedule.room,
           color: matchingClass.color,
           schedules: matchingClass.schedules,
+          credit: subject.credit ?? 0,
         }
       }
     })
@@ -271,6 +334,55 @@ export default function SchedulePlanner() {
     setDraggedFromSchedule(null)
     setAvailableClasses([])
     setHoveredSlot(null)
+  }
+
+  // Hàm xử lý khi chọn lớp từ modal
+  const handleSelectClassFromModal = (cls: ClassInfo) => {
+    if (!classSelectionModal.subject) return
+    const subject = classSelectionModal.subject
+    const day = classSelectionModal.day
+    const period = classSelectionModal.period
+
+    // Nếu đang drag từ schedule và chọn cùng lớp, không làm gì
+    if (draggedFromSchedule && cls.id === draggedFromSchedule.classId) {
+      setDraggedSubject(null)
+      setDraggedFromSchedule(null)
+      setAvailableClasses([])
+      setHoveredSlot(null)
+      setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null })
+      return
+    }
+
+    // Xóa lớp cũ của môn học này nếu có
+    const newSchedule = { ...schedule }
+    Object.keys(newSchedule).forEach((key) => {
+      if (newSchedule[key].subjectId === subject.id) {
+        delete newSchedule[key]
+      }
+    })
+
+    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
+    cls.schedules.forEach((classSchedule) => {
+      for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
+        const scheduleKey = `${classSchedule.day}-${p}`
+        newSchedule[scheduleKey] = {
+          subjectId: subject.id,
+          classId: cls.id,
+          subjectName: subject.name,
+          subjectCode: subject.code,
+          color: cls.color,
+          schedules: cls.schedules,
+          credit: subject.credit ?? 0,
+        }
+      }
+    })
+
+    setSchedule(newSchedule)
+    setDraggedSubject(null)
+    setDraggedFromSchedule(null)
+    setAvailableClasses([])
+    setHoveredSlot(null)
+    setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null })
   }
 
   const removeFromSchedule = (classId: string) => {
@@ -301,6 +413,7 @@ export default function SchedulePlanner() {
       cls.schedules.some(
         (schedule) => schedule.day === day && period >= schedule.startPeriod && period <= schedule.endPeriod,
       ),
+      // null
     )
   }
 
@@ -308,16 +421,23 @@ export default function SchedulePlanner() {
   const createMergedSchedule = () => {
     const mergedSchedule: { [key: string]: any } = {}
 
-    // Nhóm theo classId thay vì dùng schedule keys
+    // Đảm bảo mỗi classId lấy đúng schedules của lớp đã chọn
     const processedClasses = new Set<string>()
 
     Object.values(schedule).forEach((item) => {
       if (processedClasses.has(item.classId)) return
       processedClasses.add(item.classId)
-      // Dùng schedules array gốc thay vì parse từ keys
-      item.schedules.forEach((classSchedule) => {
-        const key = `${item.classId}-${classSchedule.day}-${classSchedule.startPeriod}-${classSchedule.endPeriod}`
 
+      // Tìm đúng schedules của classId này trong selectedSubjects
+      let classInfo: ClassInfo | undefined
+      const subject = selectedSubjects.find((s) => s.id === item.subjectId)
+      if (subject) {
+        classInfo = subject.classes.find((cls) => cls.id === item.classId)
+      }
+      const schedulesArr = classInfo ? classInfo.schedules : item.schedules
+
+      schedulesArr.forEach((classSchedule) => {
+        const key = `${item.classId}-${classSchedule.day}-${classSchedule.startPeriod}-${classSchedule.endPeriod}`
         mergedSchedule[key] = {
           ...item,
           startPeriod: classSchedule.startPeriod,
@@ -337,6 +457,35 @@ export default function SchedulePlanner() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      {/* Modal chọn lớp nếu có nhiều lớp phù hợp */}
+      {classSelectionModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[320px] max-w-[90vw]">
+            <div className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">Chọn lớp cho môn {classSelectionModal.subject?.name}</div>
+            <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">Có nhiều lớp trùng thời gian, hãy chọn lớp muốn xếp:</div>
+            <div className="space-y-3">
+              {classSelectionModal.classes.map((cls) => (
+                <div key={cls.id} className={`p-3 rounded border flex flex-col gap-1 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 ${colorClasses[cls.color as keyof typeof colorClasses]}`}
+                  onClick={() => handleSelectClassFromModal(cls)}
+                >
+                  <div className="font-medium text-base">Lớp {cls.id.split("-")[1]} - {cls.id}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-300">Giáo viên: {cls.schedules[0]?.teacher || "-"} | Phòng: {cls.schedules[0]?.room || "-"}</div>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {cls.schedules.map((sch, idx) => (
+                      <span key={idx} className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
+                        {sch.day} tiết {sch.startPeriod}-{sch.endPeriod}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600" onClick={() => setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null })}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Thời Khóa Biểu</h1>
@@ -377,26 +526,29 @@ export default function SchedulePlanner() {
 
                       {/* Hiển thị thông tin các lớp */}
                       <div className="mt-3 space-y-2">
-                        {subject.classes.map((cls) => (
-                          <div
-                            key={cls.id}
-                            className={`text-xs p-2 rounded-md transition-all duration-200 ${colorClasses[cls.color as keyof typeof colorClasses]}`}
-                          >
-                            <div className="font-medium mb-1">
-                              Nhóm tổ {cls.id.split("-")[1]} - {cls.id}
-                            </div>
-                            {cls.schedules.map((schedule, index) => (
-                              <div key={index} className="flex items-center gap-2 text-xs opacity-80">
-                                <Calendar className="w-3 h-3" />
-                                <span>{schedule.day}</span>
-                                <Clock className="w-3 h-3" />
-                                <span>
-                                  Tiết {schedule.startPeriod}-{schedule.endPeriod}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        ))}
+                  {subject.classes.map((cls) => (
+                    <div
+                      key={cls.id}
+                      className={`text-xs p-2 rounded-md transition-all duration-200 cursor-pointer ${colorClasses[cls.color as keyof typeof colorClasses]}`}
+                      onClick={() => handleSidebarClassClick(subject, cls)}
+                      title="Nhấn để chọn lớp này cho thời khóa biểu"
+                    >
+                      <div className="font-medium mb-1">
+                        Nhóm tổ {cls.id.split("-")[1]} - {cls.id}
+                      </div>
+                      {cls.schedules.map((schedule, index) => (
+                        <div key={index} className="flex items-center gap-2 text-xs opacity-80">
+                          <Calendar className="w-3 h-3" />
+                          <span>{schedule.day}</span>
+                          <Clock className="w-3 h-3" />
+                          <span>
+                            Tiết {schedule.startPeriod}-{schedule.endPeriod}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 font-semibold underline">Chọn lớp này</div>
+                    </div>
+                  ))}
                       </div>
                     </div>
                   ))}
@@ -464,27 +616,44 @@ export default function SchedulePlanner() {
                                 onDragEnter={(e) => handleDragEnter(e, day, period)}
                                 onDrop={(e) => handleDrop(e, day, period)}
                               >
-                                {classForSlot && draggedSubject && (
-                                  <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                                    <div
-                                      className={`text-xs font-medium ${colorClassesText[classForSlot.color as keyof typeof colorClassesText]}`}
-                                    >
-                                      Lớp {classForSlot.id.split("-")[1]}
-                                    </div>
-                                    <div
-                                      className={`text-xs ${colorClassesText[classForSlot.color as keyof typeof colorClassesText]} opacity-80`}
-                                    >
-                                      {"phòng"}
-                                    </div>
-                                  </div>
-                                )}
-                                {hasClass && draggedSubject && !classForSlot && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                                      Có lớp khả dụng
-                                    </div>
-                                  </div>
-                                )}
+                                {draggedSubject && (() => {
+                                  // Đếm số lớp khả dụng cho slot này
+                                  const subject = selectedSubjects.find((s) => s.id === draggedSubject)
+                                  let matchingClasses: ClassInfo[] = []
+                                  if (subject) {
+                                    matchingClasses = subject.classes.filter((cls) =>
+                                      cls.schedules.some(
+                                        (schedule) => schedule.day === day && period >= schedule.startPeriod && period <= schedule.endPeriod,
+                                      )
+                                    )
+                                  }
+                                  if (matchingClasses.length === 1) {
+                                    const cls = matchingClasses[0]
+                                    return (
+                                      <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
+                                        <div className={`text-xs font-medium ${colorClassesText[cls.color as keyof typeof colorClassesText]}`}>Lớp {cls.id.split("-")[1]}</div>
+                                        <div className={`text-xs ${colorClassesText[cls.color as keyof typeof colorClassesText]} opacity-80`}>{cls.schedules[0]?.room ? `phòng ${cls.schedules[0].room}` : "phòng"}</div>
+                                      </div>
+                                    )
+                                  } else if (matchingClasses.length > 1) {
+                                    // Lấy danh sách tên lớp (Lớp 8 | Lớp 10)
+                                    const classNames = matchingClasses.map(cls => `Lớp ${cls.id.split("-")[1]}`).join(" | ")
+                                    return (
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                          {classNames}
+                                        </div>
+                                      </div>
+                                    )
+                                  } else if (hasClass) {
+                                    return (
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">Có lớp khả dụng</div>
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                })()}
                               </div>
                             )
                           })}
@@ -701,9 +870,24 @@ export default function SchedulePlanner() {
                 </div>
                 <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {new Set(Object.values(schedule).map((item) => item.classId)).size}
+                    {(() => {
+                      // Lấy các subjectId đã xếp trong schedule
+                      const scheduledSubjectIds = Array.from(new Set(Object.values(schedule).map(item => item.subjectId)));
+                      // Lấy các credit duy nhất từ schedule
+                      const credits = new Set();
+                      let total = 0;
+                      for (const subjectId of scheduledSubjectIds) {
+                        // Tìm 1 block bất kỳ của subjectId này trong schedule
+                        const block = Object.values(schedule).find(item => item.subjectId === subjectId && typeof item.credit === 'number');
+                        if (block && !credits.has(subjectId)) {
+                          total += block.credit;
+                          credits.add(subjectId);
+                        }
+                      }
+                      return total;
+                    })()}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Lớp đã chọn</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Tổng số tín chỉ đã chọn</div>
                 </div>
               </div>
             </CardContent>
