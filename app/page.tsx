@@ -50,6 +50,7 @@ import { Toaster, toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Clock, BookOpen, X, Calendar } from "lucide-react"
+import AddCalendar from "@/components/AddCalendar"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 // import { useSubjects } from "@/hooks/useSubjects";
@@ -578,6 +579,7 @@ export default function SchedulePlanner() {
 
   const mergedSchedule = createMergedSchedule()
 
+
   return (
     <>
       <Toaster richColors position="top-right" />
@@ -614,7 +616,11 @@ export default function SchedulePlanner() {
         <div className="mx-auto">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Thời Khóa Biểu</h1>
-            <ThemeToggle />
+            <div className="flex items-center justify-center gap-2">
+              <AddCalendar data={schedule}></AddCalendar>
+              <ThemeToggle />
+            </div>
+            {/* <button onClick={openGoogleLogin} >gg</button> */}
           </div>
 
           <SubjectSelector />
@@ -633,7 +639,7 @@ export default function SchedulePlanner() {
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Kéo môn học vào thời khóa biểu để chọn lớp
                   </div>
-                  <div className="overflow-y-auto space-y-2" style={{height:"631px"}}>
+                  <div className="overflow-y-auto space-y-2" style={{ height: "631px" }}>
                     {[...selectedSubjects].reverse().map((subject) => (
                       <div
                         key={subject.id}
@@ -734,6 +740,8 @@ export default function SchedulePlanner() {
                       {(() => {
                         // Lấy các subjectId đã xếp trong schedule
                         const scheduledSubjectIds = Array.from(new Set(Object.values(schedule).map(item => item.subjectId)));
+                        // console.log(scheduledSubjectIds)
+                        console.log(schedule)
                         // Lấy các credit duy nhất từ schedule
                         const credits = new Set();
                         let total = 0;
@@ -1018,7 +1026,7 @@ export default function SchedulePlanner() {
                           }
 
                           const width = dayColumnWidth - 0.2
-                          console.log("bl", block);
+                          // console.log("bl", block);
                           return (
                             <div
                               key={key}
@@ -1141,3 +1149,5 @@ export default function SchedulePlanner() {
     </>
   )
 }
+
+
