@@ -17,6 +17,7 @@ export interface ScheduleItem {
     startPeriod: number
     endPeriod: number
     teacher: string
+    // date: string
     room: string
   }>
   credit: number
