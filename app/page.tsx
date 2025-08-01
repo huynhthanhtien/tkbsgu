@@ -154,7 +154,11 @@ import { useSubjects } from "@/context/SubjectsContext"
 //   },
 // ]
 
-
+const arr_start_time = [
+  "00:00", "07:00", "07:50", "09:00", "09:50", "10:40",
+  "13:00", "13:50", "15:00", "15:50", "16:40",
+  "17:40", "18:30", "19:20"
+];
 const morningPeriods = [1, 2, 3, 4, 5]
 const afternoonPeriods = [6, 7, 8, 9, 10]
 // const periods = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -822,10 +826,14 @@ export default function SchedulePlanner() {
                             className={`grid grid-cols-8 h-[60px] border-b border-gray-100 dark:border-gray-700`}
                           >
                             {/* Time label */}
-                            <div className="p-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700 flex items-center bg-gray-50/50 dark:bg-gray-800/50">
-                              <span className="font-medium">Tiết {period}</span>
+                            <div className="p-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700 flex items-center space-x-2 bg-gray-50/50 dark:bg-gray-800/50">
+                              <span>
+                                <span className="font-medium">Tiết</span>
+                                <span className="font-medium text-right w-4 inline-block">{period}</span>
+                              </span>
+                              <span className="font-medium">-</span>
+                              <span className="font-medium">{arr_start_time[period]}</span>
                             </div>
-
                             {/* Day columns */}
                             {weekDays.map((day, dayIndex) => {
                               const scheduleKey = `${day}-${period}`
@@ -917,8 +925,13 @@ export default function SchedulePlanner() {
                               }`}
                           >
                             {/* Time label */}
-                            <div className="p-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700 flex items-center bg-gray-50/50 dark:bg-gray-800/50">
-                              <span className="font-medium">Tiết {period}</span>
+                            <div className="p-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700 flex items-center space-x-2 bg-gray-50/50 dark:bg-gray-800/50">
+                              <span>
+                                <span className="font-medium">Tiết</span>
+                                <span className="font-medium text-right w-4 inline-block">{period}</span>
+                              </span>
+                              <span className="font-medium">-</span>
+                              <span className="font-medium">{arr_start_time[period]}</span>
                             </div>
 
                             {/* Day columns */}
