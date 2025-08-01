@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { ScheduleItem } from "@/components/types";
 import rawData from "@/public/data.json"; // ⚠️ Đặt file JSON trong `src/data/`, không phải `public/`
 import { Toaster, toast } from "sonner"
+import { start } from 'repl';
 
 // export interface ScheduleJson {
 //     ten_mon: string;
@@ -26,47 +27,51 @@ import { Toaster, toast } from "sonner"
 // }
 
 export async function logout(token: string): Promise<void> {
-  try {
-    const res = await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/x-www-form-urlencoded",
-      },
-    });
+    try {
+        const res = await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
+            method: "POST",
+            headers: {
+                "Content-type": "application/x-www-form-urlencoded",
+            },
+        });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Failed to revoke token. Status: ${res.status}. Message: ${errorText}`);
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Failed to revoke token. Status: ${res.status}. Message: ${errorText}`);
+        }
+
+        console.log("Token successfully revoked");
+    } catch (error) {
+        console.error("Logout error:", error);
+        throw error;
     }
-
-    console.log("Token successfully revoked");
-  } catch (error) {
-    console.error("Logout error:", error);
-    throw error;
-  }
 }
 
 
-function parseTKB(tkb: any[], monHoc: any, nhom_to: string): ScheduleJson[] {
+function parseTKB(tkb: any[], monHoc: any, nhom_to: string, index: number): ScheduleJson[] {
     return tkb.map((item: any): ScheduleJson => {
-        const [startDate, endDate] = item.ngay
-            .split(" đến ")
-            .map((s: string) => s.trim());
+        // const [startDate, endDate] = item.ngay
+        //     .split(" đến ")
+        //     .map((s: string) => s.trim());
+        const matches = item.ngay.match(/\d{2}\/\d{2}\/\d{2}/g) || [];
+        const startDate = matches[0]
+        const endDate = matches.length >= 2 ? matches[1] : startDate;
 
         return {
             ten_mon: monHoc.ten_mon,
             ma_mon: monHoc.ma_mon,
             nhom_to: nhom_to,
-            gv: item.giang_vien,
+            gv: item.giang_vien.replace(/^GV\s+/i, ""),
             phong: item.phong,
             tbd: String(item.tbd),
             so_tiet: String(item.tkt - item.tbd + 1),
+            colorID: (index % 11 + 1),
             tooltip: `Từ ${startDate} đến ${endDate}`
         };
     });
 }
 
-function get_info_class(key: string): ScheduleJson[] | null {
+function get_info_class(key: string, index: number): ScheduleJson[] | null {
     const [ma_mon, nhom_to] = key.split("-");
 
     const mon = rawData.find((item) => item.ma_mon === ma_mon);
@@ -81,15 +86,21 @@ function get_info_class(key: string): ScheduleJson[] | null {
         return null;
     }
 
-    return parseTKB(lop.tkb, mon, nhom_to);
+    return parseTKB(lop.tkb, mon, nhom_to, index);
 }
 
 function openGoogleLogin(): Promise<string | null> {
     return new Promise((resolve) => {
+        const width = 500;
+        const height = 600;
+
+        const left = window.screenX + (window.innerWidth - width) / 2;
+        const top = window.screenY + (window.innerHeight - height) / 2;
+
         const popup = window.open(
             "https://flask-api-lr7k.onrender.com",
             "_blank",
-            "width=500,height=600"
+            `width=${width},height=${height},left=${left},top=${top},popup`
         );
 
         window.addEventListener("message", function handleMessage(event) {
@@ -106,6 +117,7 @@ function openGoogleLogin(): Promise<string | null> {
     });
 }
 
+
 type AddCalendarProps = {
     data: { [key: string]: ScheduleItem };
 };
@@ -121,13 +133,16 @@ export default function AddCalendar({ data }: AddCalendarProps) {
 
             const classIds = Array.from(new Set(Object.values(data).map(item => item.classId)));
             const allScheduleItems: ScheduleJson[] = [];
+            console.log("classIds: ", classIds)
 
-            for (const classId of classIds) {
-                const schedules = get_info_class(classId);
+            classIds.forEach((classId, index) => {
+                const schedules = get_info_class(classId, index);
                 if (schedules) {
                     allScheduleItems.push(...schedules);
                 }
-            }
+                console.log("Index:", index, "ClassID:", classId);
+            });
+
 
             const calendarId = await createNewCalendar(token, 'TKB_SGU');
             toast.success("Đã tạo lịch thành công!");

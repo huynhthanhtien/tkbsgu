@@ -71,6 +71,7 @@ export interface ScheduleJson {
   phong: string;
   tbd: string; // tiết bắt đầu (string dạng số)
   so_tiet: string; // số tiết (string dạng số)
+  colorID: number;
   tooltip: string; // chứa ngày bắt đầu - kết thúc (VD: "Từ 01/09/2025 đến 31/12/2025")
 }
 
@@ -118,7 +119,7 @@ export const parseScheduleToEvent = (json: ScheduleJson): GoogleCalendarEvent =>
   return {
     summary: json.ten_mon,
     location: json.phong,
-    description: `Mã môn học: ${json.ma_mon}\nNhóm tổ: ${json.nhom_to}\nGiáo viên: ${json.gv}`,
+    description: `Mã môn học: ${json.ma_mon}\nNhóm tổ: ${json.nhom_to}\nGiảng viên: ${json.gv}`,
     start: {
       dateTime: start.toISOString(),
       timeZone: 'UTC',
@@ -131,7 +132,7 @@ export const parseScheduleToEvent = (json: ScheduleJson): GoogleCalendarEvent =>
       useDefault: false,
       overrides: [{ method: 'popup', minutes: 30 }],
     },
-    colorId: getRandomInt(1, 11),
+    colorId: json.colorID,
     visibility: 'private',
     recurrence: [
       `RRULE:FREQ=WEEKLY;UNTIL=${endDate.toISOString().replace(/[-:]|(\.000Z)/g, '')}Z`
