@@ -22,9 +22,9 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-           <SubjectProvider>
+          <SubjectProvider>
             {children}
-           </SubjectProvider>
+          </SubjectProvider>
         </ThemeProvider>
       </body>
     </html>
