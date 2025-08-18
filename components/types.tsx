@@ -34,3 +34,13 @@ export interface ClassInfo {
     room: string
   }>
 }
+
+export interface Tkb {
+    id: number;
+    name: string;
+    createdAt: string;
+    data: {
+        Sub: Subject[];
+        ScheduleItem: { [key: string]: ScheduleItem };
+    };
+}

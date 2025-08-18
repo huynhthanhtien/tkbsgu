@@ -2,157 +2,21 @@
 
 
 import type React from "react"
+import { useRouter } from "next/navigation";
 // Reusable confirmation modal component
-import type { ReactNode } from "react";
-type ConfirmModalProps = {
-  open: boolean;
-  title: ReactNode;
-  description: ReactNode;
-  onCancel: () => void;
-  onConfirm: () => void;
-  confirmText?: string;
-  cancelText?: string;
-  confirmClass?: string;
-};
-function ConfirmModal({ open, title, description, onCancel, onConfirm, confirmText = "Xoá", cancelText = "Huỷ", confirmClass = "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600" }: ConfirmModalProps) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[320px] max-w-[90vw]">
-        <div className="flex items-center gap-2 mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-red-600 dark:text-red-400">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v-.008H12v.008zm9-7.5A9 9 0 11 3 12a9 9 0 0118 0z" />
-          </svg>
-          <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">{title}</div>
-        </div>
-        <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">{description}</div>
-        <div className="flex justify-end gap-2 mt-4">
-          <button
-            className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-            onClick={onCancel}
-          >
-            {cancelText}
-          </button>
-          <button
-            className={`px-4 py-2 rounded font-semibold shadow ${confirmClass}`}
-            onClick={onConfirm}
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 import { useState, useEffect } from "react"
 import { Toaster, toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Clock, BookOpen, X, Calendar } from "lucide-react"
-import AddCalendar from "@/components/AddCalendar"
 import { ThemeToggle } from "@/components/theme-toggle"
-
-// import { useSubjects } from "@/hooks/useSubjects";
-
-
 import { ClassInfo, ScheduleItem } from "@/components/types"
-import SubjectSelector from "@/components/ui/search";
 import { useSubjects } from "@/context/SubjectsContext"
-// Dữ liệu mẫu với nhiều khoảng thời gian cho mỗi lớp
+import { useTkb } from "@/context/TkbContext";
 
-// const selectedSubjects: Subject[] = [
-//   {
-//     id: "math",
-//     name: "Toán Cao Cấp",
-//     code: "MATH101",
-//     classes: [
-//       {
-//         id: "math-1",
-//         color: "blue",
-//         schedules: [
-//           { day: "Thứ 2", startPeriod: 1, endPeriod: 3, teacher: "TS. Nguyễn Văn A", room: "A101" },
-//           { day: "Thứ 5", startPeriod: 2, endPeriod: 4, teacher: "TS. Nguyễn Văn A", room: "A101" },
-//         ],
-//       },
-//       {
-//         id: "math-2",
-//         color: "green",
-//         schedules: [
-//           { day: "Thứ 3", startPeriod: 4, endPeriod: 6, teacher: "PGS. Trần Thị B", room: "A102" },
-//           { day: "Thứ 6", startPeriod: 1, endPeriod: 2, teacher: "PGS. Trần Thị B", room: "A102" },
-//         ],
-//       },
-//       {
-//         id: "math-3",
-//         color: "purple",
-//         schedules: [
-//           { day: "Thứ 4", startPeriod: 7, endPeriod: 10, teacher: "TS. Lê Văn C", room: "A103" },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     id: "physics",
-//     name: "Vật Lý Đại Cương",
-//     code: "PHYS101",
-//     classes: [
-//       {
-//         id: "physics-1",
-//         color: "red",
-//         schedules: [
-//           { day: "Thứ 2", startPeriod: 4, endPeriod: 5, teacher: "TS. Phạm Văn D", room: "B201" },
-//           { day: "Thứ 4", startPeriod: 1, endPeriod: 3, teacher: "TS. Phạm Văn D", room: "B201" },
-//         ],
-//       },
-//       {
-//         id: "physics-2",
-//         color: "orange",
-//         schedules: [
-//           { day: "Thứ 3", startPeriod: 8, endPeriod: 10, teacher: "PGS. Hoàng Thị E", room: "B202" },
-//           { day: "Thứ 7", startPeriod: 1, endPeriod: 3, teacher: "PGS. Hoàng Thị E", room: "B202" },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     id: "chemistry",
-//     name: "Hóa Học Đại Cương",
-//     code: "CHEM101",
-//     classes: [
-//       {
-//         id: "chemistry-1",
-//         color: "teal",
-//         schedules: [
-//           { day: "Thứ 5", startPeriod: 6, endPeriod: 8, teacher: "TS. Vũ Văn F", room: "C301" },
-//         ],
-//       },
-//       {
-//         id: "chemistry-2",
-//         color: "pink",
-//         schedules: [
-//           { day: "Thứ 6", startPeriod: 3, endPeriod: 5, teacher: "ThS. Đỗ Thị G", room: "C302" },
-//           { day: "Chủ Nhật", startPeriod: 1, endPeriod: 2, teacher: "ThS. Đỗ Thị G", room: "C302" },
-//         ],
-//       },
-//     ],
-//   },
-//   {
-//     id: "english",
-//     name: "Tiếng Anh",
-//     code: "ENG101",
-//     classes: [
-//       {
-//         id: "english-1",
-//         color: "indigo",
-//         schedules: [
-//           { day: "Thứ 2", startPeriod: 6, endPeriod: 7, teacher: "ThS. Smith John", room: "D401" },
-//           { day: "Thứ 4", startPeriod: 4, endPeriod: 6, teacher: "ThS. Smith John", room: "D401" },
-//         ],
-//       },
-//     ],
-//   },
-// ]
+import SubjectSelector from "@/components/ui/search";
+import AddCalendar from "@/components/AddCalendar"
 
 const arr_start_time = [
   "00:00", "07:00", "07:50", "09:00", "09:50", "10:40",
@@ -201,6 +65,53 @@ const colorClassesHighlight = {
 
 
 export default function SchedulePlanner() {
+
+  const { selectedSubjects, addSubject, removeSubject, schedule, setSchedule } = useSubjects();
+  const { selectedTkb, setSelectedTkb} = useTkb();
+  const router = useRouter();
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, subject: any | null }>({ open: false, subject: null });
+  // const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
+
+  const [draggedSubject, setDraggedSubject] = useState<string | null>(null)
+  const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([])
+  const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
+
+  //   // Khôi phục schedule từ localStorage sau khi client mount
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined') {
+  //     try {
+  //       if (selectedTkb){
+  //         setSchedule(selectedTkb?.data.ScheduleItem);
+  //       } else {
+  //         router.replace("/");
+  //       }
+  //       // const saved = localStorage.getItem('tkb-schedule');
+  //       // if (saved) setSchedule(JSON.parse(saved));
+  //     } catch { }
+  //   }
+  // }, []);
+
+  // // Lưu schedule vào localStorage mỗi khi thay đổi
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined') {
+  //     try {
+  //       console.log("update1:" , schedule);
+  //       if (selectedTkb){
+  //         setSelectedTkb({
+  //           id: selectedTkb.id,
+  //           name: selectedTkb.name,
+  //           createdAt: selectedTkb.createdAt,
+  //           data:{
+  //             Sub: selectedSubjects,
+  //             ScheduleItem: schedule,
+  //           }
+  //         })
+  //       }
+  //       // localStorage.setItem('tkb-schedule', JSON.stringify(schedule));
+  //     } catch { }
+  //   }
+  // }, [schedule]);
+
 
   // Bổ sung: Chọn lớp từ sidebar bằng click
   function handleSidebarClassClick(subject: any, cls: ClassInfo) {
@@ -259,37 +170,6 @@ export default function SchedulePlanner() {
     setHoveredSlot(null);
     setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null });
   }
-
-
-
-  const { selectedSubjects, addSubject, removeSubject } = useSubjects();
-
-  // State for custom confirmation modal
-  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, subject: any | null }>({ open: false, subject: null });
-
-  const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
-
-  // Khôi phục schedule từ localStorage sau khi client mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('tkb-schedule');
-        if (saved) setSchedule(JSON.parse(saved));
-      } catch { }
-    }
-  }, []);
-
-  // Lưu schedule vào localStorage mỗi khi thay đổi
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('tkb-schedule', JSON.stringify(schedule));
-      } catch { }
-    }
-  }, [schedule]);
-  const [draggedSubject, setDraggedSubject] = useState<string | null>(null)
-  const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([])
-  const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
 
   const [draggedFromSchedule, setDraggedFromSchedule] = useState<{
     subjectId: string
@@ -587,7 +467,7 @@ export default function SchedulePlanner() {
   return (
     <>
       <Toaster richColors position="top-right" />
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6" style={{maxHeight:"100vh"}}>
         {/* Modal chọn lớp nếu có nhiều lớp phù hợp */}
         {classSelectionModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -1011,16 +891,6 @@ export default function SchedulePlanner() {
 
                           const left = timeColumnWidth + dayIndex * dayColumnWidth
 
-                          // LOGIC ĐƠN GIẢN với tính toán divider
-                          // LOGIC CŨ - SAI
-                          // let top = headerHeight + (block.startPeriod - 1) * cellHeight
-
-                          // // Nếu event bắt đầu từ tiết 6 trở đi, cộng thêm chiều cao divider
-                          // if (block.startPeriod >= 6) {
-                          //   top += dividerHeight
-                          // }
-
-                          // LOGIC MỚI - ĐÚNG
                           let top = headerHeight
 
                           if (block.startPeriod <= 5) {
@@ -1111,52 +981,6 @@ export default function SchedulePlanner() {
               </Card>
             </div>
           </div>
-
-          {/* Thống kê */}
-          {/* <div className="mt-6">
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Thống Kê Thời Khóa Biểu</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {Object.keys(schedule).length}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Tiết học đã xếp</div>
-                </div>
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {new Set(Object.values(schedule).map((item) => item.subjectId)).size}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Môn học đã đăng ký</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {(() => {
-                      // Lấy các subjectId đã xếp trong schedule
-                      const scheduledSubjectIds = Array.from(new Set(Object.values(schedule).map(item => item.subjectId)));
-                      // Lấy các credit duy nhất từ schedule
-                      const credits = new Set();
-                      let total = 0;
-                      for (const subjectId of scheduledSubjectIds) {
-                        // Tìm 1 block bất kỳ của subjectId này trong schedule
-                        const block = Object.values(schedule).find(item => item.subjectId === subjectId && typeof item.credit === 'number');
-                        if (block && !credits.has(subjectId)) {
-                          total += block.credit;
-                          credits.add(subjectId);
-                        }
-                      }
-                      return total;
-                    })()}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Tổng số tín chỉ đã chọn</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div> */}
         </div>
       </div>
     </>
@@ -1164,3 +988,44 @@ export default function SchedulePlanner() {
 }
 
 
+import type { ReactNode } from "react";
+type ConfirmModalProps = {
+  open: boolean;
+  title: ReactNode;
+  description: ReactNode;
+  onCancel: () => void;
+  onConfirm: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  confirmClass?: string;
+};
+function ConfirmModal({ open, title, description, onCancel, onConfirm, confirmText = "Xoá", cancelText = "Huỷ", confirmClass = "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600" }: ConfirmModalProps) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[320px] max-w-[90vw]">
+        <div className="flex items-center gap-2 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-red-600 dark:text-red-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v-.008H12v.008zm9-7.5A9 9 0 11 3 12a9 9 0 0118 0z" />
+          </svg>
+          <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">{title}</div>
+        </div>
+        <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">{description}</div>
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+            onClick={onCancel}
+          >
+            {cancelText}
+          </button>
+          <button
+            className={`px-4 py-2 rounded font-semibold shadow ${confirmClass}`}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 
 import { SubjectProvider } from "@/context/SubjectsContext";
+import { IndexedDBProvider } from "@/context/IndexedDBContext";
+import { TkbProvider } from "@/context/TkbContext";
 
 
 export const metadata: Metadata = {
@@ -22,9 +24,13 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SubjectProvider>
-            {children}
-          </SubjectProvider>
+          <IndexedDBProvider>
+            {/* <TkbProvider> */}
+              {/* <SubjectProvider> */}
+                {children}
+              {/* </SubjectProvider> */}
+            {/* </TkbProvider> */}
+          </IndexedDBProvider>
         </ThemeProvider>
       </body>
     </html>
