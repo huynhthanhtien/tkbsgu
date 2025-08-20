@@ -26,9 +26,9 @@ export const TkbProvider = ({ id, children }: { id: number; children: ReactNode 
 
     useEffect(() =>{
         const fetch = async () => {
-            console.log(id);
+            // console.log(id);
             const data = await getTkbById(id);
-            console.log("data", data);
+            // console.log("data", data);
             if (data){
                 setSelectedTkb(data);
             }
@@ -49,9 +49,9 @@ export const TkbProvider = ({ id, children }: { id: number; children: ReactNode 
         }
     }, [selectedTkb])
 
-    useEffect(() => {
-        console.log("selected tkb ", selectedTkb);
-    }, [selectedTkb]);
+    // useEffect(() => {
+    //     console.log("selected tkb ", selectedTkb);
+    // }, [selectedTkb]);
 
 
     // const updateSelectedTkb = (updates: Tkb) => {

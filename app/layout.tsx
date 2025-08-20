@@ -6,8 +6,8 @@ import { ThemeProvider } from "next-themes";
 import { SubjectProvider } from "@/context/SubjectsContext";
 import { IndexedDBProvider } from "@/context/IndexedDBContext";
 import { TkbProvider } from "@/context/TkbContext";
-
-
+import Footer from "@/components/Footer";
+import { Toaster } from "sonner";
 export const metadata: Metadata = {
   title: "TKB",
   description: "...",
@@ -25,11 +25,13 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <IndexedDBProvider>
-            {/* <TkbProvider> */}
-              {/* <SubjectProvider> */}
+            <Toaster richColors position="top-right" />
+            <div className="flex flex-col min-h-screen">
+              <main className="flex-grow">
                 {children}
-              {/* </SubjectProvider> */}
-            {/* </TkbProvider> */}
+              </main>
+              {/* <Footer /> */}
+            </div>
           </IndexedDBProvider>
         </ThemeProvider>
       </body>

@@ -43,7 +43,7 @@ export const SubjectProvider = ({ children }: { children: React.ReactNode }) => 
     if (loaded) {
       // localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedSubjects));
       if (selectedTkb) {
-        console.log("update", selectedTkb)
+        // console.log("update", selectedTkb)
         setSelectedTkb({
           id: selectedTkb.id,
           name: selectedTkb.name,

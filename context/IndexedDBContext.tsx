@@ -15,6 +15,7 @@ interface IndexedDBContextType {
     getTkbList: () => Promise<Tkb[]>;
     updateTkb: (id: number, updates: Partial<Tkb>) => Promise<void>;
     getTkbById: (id: number) => Promise<Tkb | undefined>;
+    removeTkb: (id: number) => Promise<void>;
     ready: Boolean;
 }
 
@@ -80,7 +81,7 @@ export const IndexedDBProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const updateTkb = async (id: number, updates: Partial<Tkb>) => {
         if (!db) return;
-        console.log("db update ", updates);
+        // console.log("db update ", updates);
         return new Promise<void>((resolve, reject) => {
             const tx = db.transaction(STORE_NAME, "readwrite");
             const store = tx.objectStore(STORE_NAME);
@@ -123,8 +124,22 @@ export const IndexedDBProvider: React.FC<{ children: React.ReactNode }> = ({
         });
     };
 
+    const removeTkb = async (id: number): Promise<void> => {
+        if (!db) return;
+
+        return new Promise<void>((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.delete(id);
+
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    };
+
+
     return (
-        <IndexedDBContext.Provider value={{ addTkb, getTkbList, updateTkb, ready, getTkbById }}>
+        <IndexedDBContext.Provider value={{ addTkb, getTkbList, updateTkb, ready, getTkbById, removeTkb }}>
             {children}
         </IndexedDBContext.Provider>
     );

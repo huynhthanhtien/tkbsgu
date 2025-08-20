@@ -466,7 +466,7 @@ export default function SchedulePlanner() {
 
   return (
     <>
-      <Toaster richColors position="top-right" />
+      {/* <Toaster richColors position="top-right" /> */}
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6" style={{maxHeight:"100vh"}}>
         {/* Modal chọn lớp nếu có nhiều lớp phù hợp */}
         {classSelectionModal.open && (
@@ -625,7 +625,7 @@ export default function SchedulePlanner() {
                         // Lấy các subjectId đã xếp trong schedule
                         const scheduledSubjectIds = Array.from(new Set(Object.values(schedule).map(item => item.subjectId)));
                         // console.log(scheduledSubjectIds)
-                        console.log(schedule)
+                        // console.log(schedule)
                         // Lấy các credit duy nhất từ schedule
                         const credits = new Set();
                         let total = 0;
