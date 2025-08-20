@@ -23,7 +23,7 @@ export class Compressor {
 
   static copyCurrentUrlWithChecksum(code: string):boolean {
     const checksum = crc32(code).toString(16).padStart(8, "0");
-    const currentUrl = window.location.origin;
+    const currentUrl = window.location.href;
     const newUrl = `${currentUrl}/?code=${encodeURIComponent(code)}&checksum=${checksum}`;
 
     navigator.clipboard.writeText(newUrl).then(() => {
