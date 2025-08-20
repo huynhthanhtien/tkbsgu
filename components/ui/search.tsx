@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import { ClassInfo, Subject } from "@/components/types";
 import rawData from "@/public/data.json";
 import { useTheme } from "next-themes";
-
 import { useSubjects } from "@/context/SubjectsContext";
+
+
 
 function SubjectSelector() {
   const [searchText, setSearchText] = useState("");
@@ -13,52 +14,11 @@ function SubjectSelector() {
 
   const { selectedSubjects, addSubject } = useSubjects();
 
-
-  const convertRawToSubject = (item: any): Subject => ({
-    id: item.ma_mon,
-    name: item.ten_mon,
-    code: item.ma_mon,
-    credit: Number(item.so_tc),
-    classes: item.lop.map((lopItem: any): ClassInfo => {
-      const scheduleSet = new Set<string>();
-      const schedules = lopItem.tkb
-        .map((tkbItem: any) => {
-          const key = `${tkbItem.thu}-${tkbItem.tbd}-${tkbItem.tkt}-${tkbItem.phong}-${tkbItem.giang_vien}`;
-          if (scheduleSet.has(key)) return null; // bỏ nếu đã có
-          scheduleSet.add(key);
-          return {
-            teacher: tkbItem.giang_vien,
-            day: tkbItem.thu,
-            startPeriod: tkbItem.tbd,
-            endPeriod: tkbItem.tkt,
-            room: tkbItem.phong,
-          };
-        })
-        .filter(Boolean); // bỏ các giá trị null
-
-      return {
-        id: `${item.ma_mon}-${lopItem.nhom_to}`,
-        color: getRandomColorName(),
-        schedules,
-      };
-    }),
-  });
-
-  const colorNames = [
-    "red", "orange", "green", "blue", "indigo",
-    "purple", "pink", "teal"
-  ];
-
-  function getRandomColorName(): string {
-    const index = Math.floor(Math.random() * colorNames.length);
-    return colorNames[index];
-  }
-
   const handleAddSubject = (item: any) => {
     const subject = convertRawToSubject(item);
     addSubject(subject);
     console.log(subject);
-    setSearchText(""); 
+    setSearchText("");
   };
 
   const filteredList =
@@ -92,7 +52,7 @@ function SubjectSelector() {
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                   onClick={() => handleAddSubject(item)}
                 >
-                  {item.ma_mon} - {item.ten_mon} 
+                  {item.ma_mon} - {item.ten_mon}
                 </li>
               ))}
             </ul>
@@ -104,3 +64,53 @@ function SubjectSelector() {
 }
 
 export default SubjectSelector;
+
+
+
+export function getSubjectById(id: string): Subject {
+  const result = rawData.find((item: any) => item.ma_mon === id);
+  if (!result) {
+    throw new Error(`Subject with id ${id} not found`);
+  }
+  return convertRawToSubject(result);
+}
+
+const convertRawToSubject = (item: any): Subject => ({
+  id: item.ma_mon,
+  name: item.ten_mon,
+  code: item.ma_mon,
+  credit: Number(item.so_tc),
+  classes: item.lop.map((lopItem: any): ClassInfo => {
+    const scheduleSet = new Set<string>();
+    const schedules = lopItem.tkb
+      .map((tkbItem: any) => {
+        const key = `${tkbItem.thu}-${tkbItem.tbd}-${tkbItem.tkt}-${tkbItem.phong}-${tkbItem.giang_vien}`;
+        if (scheduleSet.has(key)) return null; // bỏ nếu đã có
+        scheduleSet.add(key);
+        return {
+          teacher: tkbItem.giang_vien,
+          day: tkbItem.thu,
+          startPeriod: tkbItem.tbd,
+          endPeriod: tkbItem.tkt,
+          room: tkbItem.phong,
+        };
+      })
+      .filter(Boolean); // bỏ các giá trị null
+
+    return {
+      id: `${item.ma_mon}-${lopItem.nhom_to}`,
+      color: getRandomColorName(),
+      schedules,
+    };
+  }),
+});
+
+function getRandomColorName(): string {
+  const index = Math.floor(Math.random() * colorNames.length);
+  return colorNames[index];
+}
+
+const colorNames = [
+  "red", "orange", "green", "blue", "indigo",
+  "purple", "pink", "teal"
+];

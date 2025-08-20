@@ -1,3 +1,5 @@
+"use client"
+
 export interface Subject{
   id: string,
   name: string,
@@ -33,4 +35,14 @@ export interface ClassInfo {
     teacher: string
     room: string
   }>
+}
+
+export interface Tkb {
+    id: number;
+    name: string;
+    createdAt: string;
+    data: {
+        Sub: Subject[];
+        ScheduleItem: { [key: string]: ScheduleItem };
+    };
 }

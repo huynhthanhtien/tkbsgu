@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { Subject } from "@/components/types";
+import { useTkb } from "@/context/TkbContext";
+import { ScheduleItem } from "@/components/types"
 
 const STORAGE_KEY = "selectedSubjects";
 
@@ -10,28 +12,50 @@ type SubjectContextType = {
   addSubject: (subject: Subject) => void;
   removeSubject: (ma_mon: string) => void;
   clearAll: () => void;
-  setSelectedSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
+  schedule: { [key: string]: ScheduleItem };
+  setSchedule: React.Dispatch<React.SetStateAction<{ [key: string]: ScheduleItem }>>
+  // setSelectedSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
+  // setSelectedSubjects: (Subject: Subject[]) => void;
 };
 
 const SubjectContext = createContext<SubjectContextType | undefined>(undefined);
 
 export const SubjectProvider = ({ children }: { children: React.ReactNode }) => {
+  const { selectedTkb, setSelectedTkb } = useTkb();
   const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
+  const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setSelectedSubjects(JSON.parse(stored));
-    }
+    // const stored = localStorage.getItem(STORAGE_KEY);
+    // if (!tkb) return;
+    // if (stored) {
+    //   setSelectedSubjects(JSON.parse(stored));
+    // }
+    if (selectedTkb) {
+      setSelectedSubjects(selectedTkb.data.Sub);
+      setSchedule(selectedTkb.data.ScheduleItem);
+    } else return;
     setLoaded(true);
-  }, []);
+  }, [selectedTkb]);
 
   useEffect(() => {
     if (loaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedSubjects));
+      // localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedSubjects));
+      if (selectedTkb) {
+        // console.log("update", selectedTkb)
+        setSelectedTkb({
+          id: selectedTkb.id,
+          name: selectedTkb.name,
+          createdAt: selectedTkb.createdAt,
+          data: {
+            Sub: selectedSubjects,
+            ScheduleItem: schedule,
+          }
+        })
+      }
     }
-  }, [selectedSubjects, loaded]);
+  }, [selectedSubjects, loaded, schedule]);
 
   const addSubject = (subject: Subject) => {
     setSelectedSubjects((prev) =>
@@ -49,7 +73,7 @@ export const SubjectProvider = ({ children }: { children: React.ReactNode }) => 
 
   return (
     <SubjectContext.Provider
-      value={{ selectedSubjects, addSubject, removeSubject, clearAll, setSelectedSubjects }}
+      value={{ selectedSubjects, addSubject, removeSubject, clearAll, schedule, setSchedule }}
     >
       {children}
     </SubjectContext.Provider>
