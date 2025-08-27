@@ -67,7 +67,7 @@ const colorClassesHighlight = {
 export default function SchedulePlanner() {
 
   const { selectedSubjects, addSubject, removeSubject, schedule, setSchedule } = useSubjects();
-  const { selectedTkb, setSelectedTkb} = useTkb();
+  const { selectedTkb, setSelectedTkb } = useTkb();
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, subject: any | null }>({ open: false, subject: null });
   // const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
@@ -75,43 +75,6 @@ export default function SchedulePlanner() {
   const [draggedSubject, setDraggedSubject] = useState<string | null>(null)
   const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([])
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null)
-
-  //   // Khôi phục schedule từ localStorage sau khi client mount
-  // useEffect(() => {
-  //   if (typeof window !== 'undefined') {
-  //     try {
-  //       if (selectedTkb){
-  //         setSchedule(selectedTkb?.data.ScheduleItem);
-  //       } else {
-  //         router.replace("/");
-  //       }
-  //       // const saved = localStorage.getItem('tkb-schedule');
-  //       // if (saved) setSchedule(JSON.parse(saved));
-  //     } catch { }
-  //   }
-  // }, []);
-
-  // // Lưu schedule vào localStorage mỗi khi thay đổi
-  // useEffect(() => {
-  //   if (typeof window !== 'undefined') {
-  //     try {
-  //       console.log("update1:" , schedule);
-  //       if (selectedTkb){
-  //         setSelectedTkb({
-  //           id: selectedTkb.id,
-  //           name: selectedTkb.name,
-  //           createdAt: selectedTkb.createdAt,
-  //           data:{
-  //             Sub: selectedSubjects,
-  //             ScheduleItem: schedule,
-  //           }
-  //         })
-  //       }
-  //       // localStorage.setItem('tkb-schedule', JSON.stringify(schedule));
-  //     } catch { }
-  //   }
-  // }, [schedule]);
-
 
   // Bổ sung: Chọn lớp từ sidebar bằng click
   function handleSidebarClassClick(subject: any, cls: ClassInfo) {
@@ -127,7 +90,7 @@ export default function SchedulePlanner() {
       for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
         const scheduleKey = `${sch.day}-${p}`;
         const slotItem = schedule[scheduleKey];
-        if (slotItem && slotItem.subjectId !== subject.id) {
+        if (slotItem && slotItem.subjectCode !== subject.id) {
           conflict = { day: sch.day, p, subjectName: slotItem.subjectName };
           break;
         }
@@ -250,37 +213,40 @@ export default function SchedulePlanner() {
     );
 
     // Nếu có lớp phù hợp, kiểm tra trùng slot cho từng lớp phù hợp
-    let conflict = null;
-    for (const cls of conflictCheckClasses) {
-      for (const sch of cls.schedules) {
-        if (sch.day === day && period >= sch.startPeriod && period <= sch.endPeriod) {
-          for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
-            const key = `${day}-${p}`;
-            const slotItem = schedule[key];
-            if (slotItem && slotItem.subjectId !== draggedSubject) {
-              conflict = { day, p, subjectName: slotItem.subjectName };
-              break;
+    if (conflictCheckClasses.length === 1){
+
+      let conflict = null;
+      for (const cls of conflictCheckClasses) {
+        for (const sch of cls.schedules) {
+          if (sch.day === day && period >= sch.startPeriod && period <= sch.endPeriod) {
+            for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
+              const key = `${day}-${p}`;
+              const slotItem = schedule[key];
+              if (slotItem && slotItem.subjectCode !== draggedSubject) {
+                conflict = { day, p, subjectName: slotItem.subjectName };
+                break;
+              }
             }
           }
+          if (conflict) break;
         }
         if (conflict) break;
       }
-      if (conflict) break;
-    }
-    if (conflict) {
-      console.log('CONFLICT_DROP', conflict);
-      setTimeout(() => {
-        toast.warning(`Không thể kéo vào ô đã có môn khác (${conflict.subjectName}, tiết ${conflict.p})!`);
-      }, 0);
-      setDraggedSubject(null);
-      setDraggedFromSchedule(null);
-      setAvailableClasses([]);
-      setHoveredSlot(null);
-      return;
+      if (conflict) {
+        console.log('CONFLICT_DROP', conflict);
+        setTimeout(() => {
+          toast.warning(`Không thể kéo vào ô đã có môn khác (${conflict.subjectName}, tiết ${conflict.p})!`);
+        }, 0);
+        setDraggedSubject(null);
+        setDraggedFromSchedule(null);
+        setAvailableClasses([]);
+        setHoveredSlot(null);
+        return;
+      }
     }
 
-    // Tìm tất cả lớp có chứa ô này trong lịch học
-    const matchingClasses = subject.classes.filter((cls) =>
+      // Tìm tất cả lớp có chứa ô này trong lịch học
+      const matchingClasses = subject.classes.filter((cls) =>
       cls.schedules.some(
         (schedule) => schedule.day === day && period >= schedule.startPeriod && period <= schedule.endPeriod,
       ),
@@ -359,6 +325,23 @@ export default function SchedulePlanner() {
       setHoveredSlot(null)
       setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null })
       return
+    }
+
+    let conflict = null;
+    for (const sch of cls.schedules) {
+      for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
+        const scheduleKey = `${sch.day}-${p}`;
+        const slotItem = schedule[scheduleKey];
+        if (slotItem && slotItem.subjectCode !== subject.id) {
+          conflict = { day: sch.day, p, subjectName: slotItem.subjectName };
+          break;
+        }
+      }
+      if (conflict) break;
+    }
+    if (conflict) {
+      toast.warning(`Không thể chọn lớp vì trùng với môn khác (${conflict.subjectName}, tiết ${conflict.p})!`);
+      return;
     }
 
     // Xóa lớp cũ của môn học này nếu có
@@ -467,7 +450,7 @@ export default function SchedulePlanner() {
   return (
     <>
       {/* <Toaster richColors position="top-right" /> */}
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6" style={{maxHeight:"100vh"}}>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6" style={{ maxHeight: "100vh" }}>
         {/* Modal chọn lớp nếu có nhiều lớp phù hợp */}
         {classSelectionModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
