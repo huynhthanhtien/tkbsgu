@@ -21278,5 +21278,403 @@
         ]
       }
     ]
+  },
+  {
+    "ma_mon": "CALO11",
+    "ten_mon": "Cầu lông 1",
+    "so_tc": "1",
+    "lop": [
+      {
+        "nhom_to": "01",
+        "tkb": [
+          {
+            "thu": "Thứ 4",
+            "thoi_gian": "từ 13:50 đến 15:00",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "14/01/26 đến 04/02/26",
+            "tbd": 7,
+            "tkt": 8
+          },
+          {
+            "thu": "Thứ 4",
+            "thoi_gian": "từ 13:50 đến 15:00",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "04/03/26 đến 13/05/26",
+            "tbd": 7,
+            "tkt": 8
+          }
+        ]
+      },
+      {
+        "nhom_to": "02",
+        "tkb": [
+          {
+            "thu": "Thứ 3",
+            "thoi_gian": "từ 13:00 đến 13:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "13/01/26 đến 03/02/26",
+            "tbd": 6,
+            "tkt": 7
+          },
+          {
+            "thu": "Thứ 3",
+            "thoi_gian": "từ 13:00 đến 13:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "03/03/26 đến 12/05/26",
+            "tbd": 6,
+            "tkt": 7
+          }
+        ]
+      },
+      {
+        "nhom_to": "03",
+        "tkb": [
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 13:00 đến 13:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "15/01/26 đến 05/02/26",
+            "tbd": 6,
+            "tkt": 7
+          },
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 13:00 đến 13:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "05/03/26 đến 14/05/26",
+            "tbd": 6,
+            "tkt": 7
+          }
+        ]
+      },
+      {
+        "nhom_to": "04",
+        "tkb": [
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 09:00 đến 09:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "15/01/26 đến 05/02/26",
+            "tbd": 3,
+            "tkt": 4
+          },
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 09:00 đến 09:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "05/03/26 đến 14/05/26",
+            "tbd": 3,
+            "tkt": 4
+          }
+        ]
+      },
+      {
+        "nhom_to": "05",
+        "tkb": [
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 07:00 đến 07:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "15/01/26 đến 05/02/26",
+            "tbd": 1,
+            "tkt": 2
+          },
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 07:00 đến 07:50",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "05/03/26 đến 14/05/26",
+            "tbd": 1,
+            "tkt": 2
+          }
+        ]
+      },
+      {
+        "nhom_to": "06",
+        "tkb": [
+          {
+            "thu": "Thứ 2",
+            "thoi_gian": "từ 07:00 đến 07:50",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "12/01/26 đến 02/02/26",
+            "tbd": 1,
+            "tkt": 2
+          },
+          {
+            "thu": "Thứ 2",
+            "thoi_gian": "từ 07:00 đến 07:50",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "02/03/26 đến 11/05/26",
+            "tbd": 1,
+            "tkt": 2
+          }
+        ]
+      },
+      {
+        "nhom_to": "07",
+        "tkb": [
+          {
+            "thu": "Thứ 3",
+            "thoi_gian": "từ 09:50 đến 10:40",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "13/01/26 đến 03/02/26",
+            "tbd": 4,
+            "tkt": 5
+          },
+          {
+            "thu": "Thứ 3",
+            "thoi_gian": "từ 09:50 đến 10:40",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "03/03/26 đến 12/05/26",
+            "tbd": 4,
+            "tkt": 5
+          }
+        ]
+      },
+      {
+        "nhom_to": "08",
+        "tkb": [
+          {
+            "thu": "Thứ 4",
+            "thoi_gian": "từ 09:50 đến 10:40",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "14/01/26 đến 04/02/26",
+            "tbd": 4,
+            "tkt": 5
+          },
+          {
+            "thu": "Thứ 4",
+            "thoi_gian": "từ 09:50 đến 10:40",
+            "phong": "Ph C.SCL02",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "04/03/26 đến 13/05/26",
+            "tbd": 4,
+            "tkt": 5
+          }
+        ]
+      },
+      {
+        "nhom_to": "09",
+        "tkb": [
+          {
+            "thu": "Thứ 3",
+            "thoi_gian": "từ 13:00 đến 15:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "23/12/25 đến 03/02/26",
+            "tbd": 6,
+            "tkt": 8
+          },
+          {
+            "thu": "Thứ 3",
+            "thoi_gian": "từ 13:00 đến 15:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "03/03/26 đến 17/03/26",
+            "tbd": 6,
+            "tkt": 8
+          }
+        ]
+      },
+      {
+        "nhom_to": "10",
+        "tkb": [
+          {
+            "thu": "Thứ 6",
+            "thoi_gian": "từ 13:00 đến 15:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "26/12/25 đến 06/02/26",
+            "tbd": 6,
+            "tkt": 8
+          },
+          {
+            "thu": "Thứ 6",
+            "thoi_gian": "từ 13:00 đến 15:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "06/03/26 đến 20/03/26",
+            "tbd": 6,
+            "tkt": 8
+          }
+        ]
+      },
+      {
+        "nhom_to": "11",
+        "tkb": [
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 13:00 đến 15:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "25/12/25 đến 05/02/26",
+            "tbd": 6,
+            "tkt": 8
+          },
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 13:00 đến 15:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "05/03/26 đến 19/03/26",
+            "tbd": 6,
+            "tkt": 8
+          }
+        ]
+      },
+      {
+        "nhom_to": "12",
+        "tkb": [
+          {
+            "thu": "Thứ 6",
+            "thoi_gian": "từ 07:00 đến 09:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "26/12/25 đến 06/02/26",
+            "tbd": 1,
+            "tkt": 3
+          },
+          {
+            "thu": "Thứ 6",
+            "thoi_gian": "từ 07:00 đến 09:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "06/03/26 đến 20/03/26",
+            "tbd": 1,
+            "tkt": 3
+          }
+        ]
+      },
+      {
+        "nhom_to": "13",
+        "tkb": [
+          {
+            "thu": "Thứ 2",
+            "thoi_gian": "từ 13:50 đến 15:50",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "22/12/25 đến 02/02/26",
+            "tbd": 7,
+            "tkt": 9
+          },
+          {
+            "thu": "Thứ 2",
+            "thoi_gian": "từ 13:50 đến 15:50",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "02/03/26 đến 16/03/26",
+            "tbd": 7,
+            "tkt": 9
+          }
+        ]
+      },
+      {
+        "nhom_to": "14",
+        "tkb": [
+          {
+            "thu": "Thứ 7",
+            "thoi_gian": "từ 07:00 đến 09:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "27/12/25 đến 07/02/26",
+            "tbd": 1,
+            "tkt": 3
+          },
+          {
+            "thu": "Thứ 7",
+            "thoi_gian": "từ 07:00 đến 09:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "07/03/26 đến 21/03/26",
+            "tbd": 1,
+            "tkt": 3
+          }
+        ]
+      },
+      {
+        "nhom_to": "15",
+        "tkb": [
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 07:00 đến 09:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "25/12/25 đến 05/02/26",
+            "tbd": 1,
+            "tkt": 3
+          },
+          {
+            "thu": "Thứ 5",
+            "thoi_gian": "từ 07:00 đến 09:00",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "05/03/26 đến 19/03/26",
+            "tbd": 1,
+            "tkt": 3
+          }
+        ]
+      },
+      {
+        "nhom_to": "16",
+        "tkb": [
+          {
+            "thu": "Thứ 2",
+            "thoi_gian": "từ 09:00 đến 10:40",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "22/12/25 đến 02/02/26",
+            "tbd": 3,
+            "tkt": 5
+          },
+          {
+            "thu": "Thứ 2",
+            "thoi_gian": "từ 09:00 đến 10:40",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV N.Đ.M.Sơn",
+            "ngay": "02/03/26 đến 16/03/26",
+            "tbd": 3,
+            "tkt": 5
+          }
+        ]
+      },
+      {
+        "nhom_to": "17",
+        "tkb": [
+          {
+            "thu": "Thứ 4",
+            "thoi_gian": "từ 13:50 đến 15:50",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "24/12/25 đến 04/02/26",
+            "tbd": 7,
+            "tkt": 9
+          },
+          {
+            "thu": "Thứ 4",
+            "thoi_gian": "từ 13:50 đến 15:50",
+            "phong": "Ph C.SCL01",
+            "giang_vien": "GV L.N.Long",
+            "ngay": "04/03/26 đến 18/03/26",
+            "tbd": 7,
+            "tkt": 9
+          }
+        ]
+      }
+    ]
   }
 ]
