@@ -9,7 +9,7 @@ import { useState, useEffect } from "react"
 import { Toaster, toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, BookOpen, X, Calendar } from "lucide-react"
+import { BookOpen, X, Calendar, User, MapPin } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ClassInfo, ScheduleItem } from "@/components/types"
 import { useSubjects } from "@/context/SubjectsContext"
@@ -565,29 +565,46 @@ export default function SchedulePlanner() {
                         {/* Hiển thị thông tin các lớp */}
                         {expandedSubjects[subject.id] && (
                           <div className="mt-3 space-y-2">
-                            {subject.classes.map((cls) => (
-                              <div
-                                key={cls.id}
-                                className={`text-xs p-2 rounded-md transition-all duration-200 cursor-pointer ${colorClasses[cls.color as keyof typeof colorClasses]}`}
-                                onClick={() => handleSidebarClassClick(subject, cls)}
-                                title="Nhấn để chọn lớp này cho thời khóa biểu"
-                              >
-                                <div className="font-medium mb-1">
-                                  Nhóm tổ {cls.id.split("-")[1]} - {cls.id}
-                                </div>
-                                {cls.schedules.map((schedule, index) => (
-                                  <div key={index} className="flex items-center gap-2 text-xs opacity-80">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{schedule.day}</span>
-                                    <Clock className="w-3 h-3" />
-                                    <span>
-                                      Tiết {schedule.startPeriod}-{schedule.endPeriod}
+                            {subject.classes.map((cls) => {
+                              const teachers = Array.from(
+                                new Set(cls.schedules.map((s) => s.teacher).filter(Boolean))
+                              ).join(", ");
+
+                              const uniqueSchedules = cls.schedules.filter(
+                                (s, idx, arr) =>
+                                  arr.findIndex(
+                                    (other) => other.day === s.day && other.room === s.room
+                                  ) === idx
+                              );
+
+                              return (
+                                <div
+                                  key={cls.id}
+                                  className={`text-xs p-2 rounded-md transition-all duration-200 cursor-pointer ${colorClasses[cls.color as keyof typeof colorClasses]}`}
+                                  onClick={() => handleSidebarClassClick(subject, cls)}
+                                  title="Nhấn để chọn lớp này cho thời khóa biểu"
+                                >
+                                  <div className="font-medium mb-1">
+                                    Nhóm tổ {cls.id.split("-")[1]} - {cls.id}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-xs opacity-90 mb-1">
+                                    <User className="w-3 h-3 shrink-0" />
+                                    <span className="truncate" title={teachers || "Chưa có giảng viên"}>
+                                      {teachers || "Chưa có GV"}
                                     </span>
                                   </div>
-                                ))}
-                                <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 font-semibold underline">Chọn lớp này</div>
-                              </div>
-                            ))}
+                                  {uniqueSchedules.map((schedule, index) => (
+                                    <div key={index} className="flex items-center gap-2 text-xs opacity-80">
+                                      <Calendar className="w-3 h-3 shrink-0" />
+                                      <span>{schedule.day}</span>
+                                      <MapPin className="w-3 h-3 shrink-0 ml-1" />
+                                      <span>{schedule.room || "Chưa có phòng"}</span>
+                                    </div>
+                                  ))}
+                                  <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 font-semibold underline">Chọn lớp này</div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
