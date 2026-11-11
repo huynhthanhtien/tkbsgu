@@ -33,23 +33,26 @@ function SubjectSelector() {
       : [];
 
   return (
-    <div className="p-4 max-w-3xl mx-auto relative">
+    <div className="p-0 lg:p-4 max-w-3xl mx-auto relative">
       <div className="relative">
         <input
-          type="text"
+          type="search"
+          inputMode="search"
+          autoComplete="off"
+          enterKeyHint="search"
           placeholder="Tìm kiếm môn học..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded mb-2 bg-white dark:bg-gray-800 dark:text-white"
+          className="w-full min-h-12 lg:min-h-0 p-3 lg:p-2 text-base lg:text-sm border border-gray-300 dark:border-gray-600 rounded-xl lg:rounded mb-2 bg-white dark:bg-gray-800 dark:text-white"
         />
 
         {searchText.length >= 2 && filteredList.length > 0 && (
-          <div className="absolute z-10 top-full left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow max-h-64 overflow-y-auto">
+          <div className="absolute z-10 top-full left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow max-h-[50dvh] lg:max-h-64 overflow-y-auto rounded-xl lg:rounded">
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredList.map((item: any) => (
                 <li
                   key={`${item.ma_mon}-${item.nhom_to}`}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  className="px-3 py-3.5 lg:p-2 text-sm hover:bg-gray-100 active:bg-gray-100 dark:hover:bg-gray-700 dark:active:bg-gray-700 cursor-pointer"
                   onClick={() => handleAddSubject(item)}
                 >
                   {item.ma_mon} - {item.ten_mon}

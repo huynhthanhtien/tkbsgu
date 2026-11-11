@@ -120,9 +120,11 @@ function openGoogleLogin(): Promise<string | null> {
 
 type AddCalendarProps = {
     data: { [key: string]: ScheduleItem };
+    /** Hiện chữ cạnh biểu tượng (dùng trên điện thoại). */
+    showLabel?: boolean;
 };
 
-export default function AddCalendar({ data }: AddCalendarProps) {
+export default function AddCalendar({ data, showLabel = false }: AddCalendarProps) {
     const handleAddCalendar = async () => {
         try {
             const token = await openGoogleLogin();
@@ -171,7 +173,7 @@ export default function AddCalendar({ data }: AddCalendarProps) {
     return (
         <Button onClick={handleAddCalendar} variant="outline" className="gap-2" title="Thêm vào Google Calendar">
             <CalendarPlus className="w-4 h-4" />
-            {/* Thêm vào Google Calendar */}
+            {showLabel && "Thêm vào Google Calendar"}
         </Button>
     );
 }

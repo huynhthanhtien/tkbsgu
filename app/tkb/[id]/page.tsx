@@ -18,6 +18,7 @@ import { useTkb } from "@/context/TkbContext";
 import SubjectSelector from "@/components/ui/search";
 import AddCalendar from "@/components/AddCalendar"
 import AIPromptButton from "@/components/AIPromptButton"
+import MobileScheduler, { type MobileBlock } from "@/components/mobile/MobileScheduler"
 import { TkbsDecode } from "@/utils/compressor"
 import type { PlanResult } from "@/lib/aiPrompt"
 
@@ -29,7 +30,7 @@ const arr_start_time = [
 const morningPeriods = [1, 2, 3, 4, 5]
 const afternoonPeriods = [6, 7, 8, 9, 10]
 // const periods = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-const weekDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"]
+const weekDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"] // khớp đúng chuỗi trong data.json
 
 // Màu sắc cho từng lớp (hỗ trợ dark mode) - Google Calendar style
 const colorClasses = {
@@ -543,11 +544,59 @@ export default function SchedulePlanner() {
 
   const mergedSchedule = createMergedSchedule()
 
+  // Tổng tín chỉ: mỗi môn đã xếp chỉ tính một lần
+  const totalCredits = (() => {
+    const counted = new Set<string>()
+    let total = 0
+    Object.values(schedule).forEach((item) => {
+      if (counted.has(item.subjectId) || typeof item.credit !== "number") return
+      counted.add(item.subjectId)
+      total += item.credit
+    })
+    return total
+  })()
+
+  // Xóa môn khỏi lịch và danh sách (dùng chung cho desktop và mobile)
+  const deleteSubject = (subject: { id: string; name: string }) => {
+    const newSchedule = { ...schedule }
+    Object.keys(newSchedule).forEach((key) => {
+      if (newSchedule[key].subjectId === subject.id) delete newSchedule[key]
+    })
+    setSchedule(newSchedule)
+    removeSubject(subject.id)
+    toast.success(`Đã xoá môn '${subject.name}' khỏi danh sách và thời khoá biểu!`)
+  }
+
 
   return (
     <>
       {/* <Toaster richColors position="top-right" /> */}
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6" style={{ maxHeight: "100vh" }}>
+      {/* Giao diện điện thoại / máy tính bảng dọc: dưới 1024px */}
+      <div className="lg:hidden">
+        <MobileScheduler
+          subjects={selectedSubjects}
+          schedule={schedule}
+          blocks={Object.values(mergedSchedule) as MobileBlock[]}
+          credits={totalCredits}
+          onSelectClass={handleSidebarClassClick}
+          onRemoveClass={removeFromSchedule}
+          onRemoveSubject={deleteSubject}
+          plans={plans}
+          activePlan={activePlan}
+          currentPlan={currentPlan}
+          previewing={!!preview}
+          onPickPlan={setActivePlan}
+          onApplyPlan={handleApplyPlan}
+          onStopPreview={stopPreview}
+          onSharePlans={sharePlans}
+          onDeletePlans={deletePlans}
+          aiButton={<AIPromptButton subjectIds={selectedSubjects.map((s) => s.id)} onPlans={handlePlans} />}
+          calendarButton={<AddCalendar data={schedule} showLabel />}
+        />
+      </div>
+
+      {/* Giao diện máy tính: từ 1024px */}
+      <div className="hidden lg:block min-h-screen bg-gray-50 dark:bg-gray-900 p-6" style={{ maxHeight: "100vh" }}>
         {/* Modal chọn lớp nếu có nhiều lớp phù hợp */}
         {classSelectionModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -635,17 +684,7 @@ export default function SchedulePlanner() {
                             onConfirm={() => {
                               const subject = confirmDelete.subject;
                               if (!subject) return;
-                              // Xoá khỏi schedule
-                              const newSchedule = { ...schedule };
-                              Object.keys(newSchedule).forEach((key) => {
-                                if (newSchedule[key].subjectId === subject.id) {
-                                  delete newSchedule[key];
-                                }
-                              });
-                              setSchedule(newSchedule);
-                              // Xoá khỏi danh sách môn học nếu context cho phép
-                              removeSubject(subject.id);
-                              toast.success(`Đã xoá môn '${subject.name}' khỏi danh sách và thời khoá biểu!`);
+                              deleteSubject(subject);
                               setConfirmDelete({ open: false, subject: null });
                             }}
                           />

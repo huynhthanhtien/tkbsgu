@@ -265,11 +265,11 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-between text-white font-sans animate-fadeIn">
+    <div className="min-h-dvh bg-black flex flex-col justify-between text-white font-sans animate-fadeIn">
       <div className="flex flex-col items-center py-10">
         {/* Card giới thiệu */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl text-center max-w-2xl mb-10">
-          <h1 className="text-4xl font-bold mb-4 flex justify-center items-center gap-3">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-2xl text-center max-w-2xl mx-4 mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 flex justify-center items-center gap-3">
             <CalendarIcon className="w-10 h-10" />
             Xếp Thời Khóa Biểu
           </h1>
@@ -282,7 +282,7 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
         <div className="flex flex-wrap items-center justify-center gap-4">
           <button
             onClick={handleCreateNew}
-            className="flex items-center gap-3 bg-white text-indigo-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300"
+            className="flex min-h-12 items-center gap-3 bg-white text-indigo-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300"
           >
             <PlusCircleIcon className="w-6 h-6" />
             Tạo Thời Khóa Biểu Mới
@@ -290,7 +290,7 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
           <button
             type="button"
             onClick={handleCopyAgentPrompt}
-            className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition"
+            className="flex min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition"
             title="Sao chép prompt để xếp thời khóa biểu bằng AI agent"
           >
             <Copy className="w-4 h-4" />
@@ -299,7 +299,7 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
         </div>
 
         {/* Danh sách TKB */}
-        <div className="mt-10 w-full max-w-xl">
+        <div className="mt-10 w-full max-w-xl px-4">
           <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
             <FolderOpenIcon className="w-6 h-6" /> Thời Khóa Biểu Đã Lưu
           </h2>
@@ -328,7 +328,7 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-2 rounded-full hover:bg-white/20 transition"
+                          className="p-3 -m-1 rounded-full hover:bg-white/20 transition"
                           onClick={(e) => e.stopPropagation()} // Ngăn việc click mở tkb
                         >
                           <MoreVertical className="w-5 h-5 text-white/80" />
@@ -380,7 +380,7 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
       {/* Popup */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center backdrop-blur-[1px] z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-6 w-96">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-[calc(100vw-2rem)] max-w-sm">
             <h2 className="text-xl font-semibold text-black mb-4 text-center">
               Nhập tên thời khóa biểu
             </h2>
@@ -388,19 +388,19 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
+              className="w-full border border-gray-300 rounded-lg px-3 py-3 text-base mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
               placeholder="Ví dụ: Học kỳ 1 - 2025"
             />
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowPopup(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-black hover:bg-gray-100"
+                className="min-h-11 px-4 py-2 rounded-lg border border-gray-300 text-black hover:bg-gray-100"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSubmit}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                className="min-h-11 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 Lưu
               </button>
@@ -411,7 +411,7 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
 
       {open && (
         <div className="fixed inset-0 flex items-center justify-center backdrop-blur-[1px] z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-6 w-96">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-[calc(100vw-2rem)] max-w-sm">
             <h2 className="text-xl font-semibold text-black mb-4 text-center">
               Nhập tên thời khóa biểu
             </h2>
@@ -419,19 +419,19 @@ Dùng website đích ${origin} và tạo một link chứa các phương án h�
               type="text"
               value={shareName}
               onChange={(e) => setShareName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
+              className="w-full border border-gray-300 rounded-lg px-3 py-3 text-base mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none text-black"
               placeholder="Ví dụ: Học kỳ 1 - 2025"
             />
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setOpen(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-black hover:bg-gray-100"
+                className="min-h-11 px-4 py-2 rounded-lg border border-gray-300 text-black hover:bg-gray-100"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSubmitShare}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                className="min-h-11 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 Lưu
               </button>

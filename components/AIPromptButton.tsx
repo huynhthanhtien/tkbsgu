@@ -44,12 +44,12 @@ function Check_({
   label: string;
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+    <label className="flex items-center gap-3 py-2 sm:py-0 text-sm cursor-pointer select-none">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 rounded"
+        className="w-5 h-5 sm:w-4 sm:h-4 rounded"
       />
       {label}
     </label>
@@ -139,23 +139,23 @@ export default function AIPromptButton({ subjectIds, onPlans }: Props) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60"
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 shadow-2xl"
+            className="w-full max-w-2xl max-h-[92dvh] overflow-y-auto overscroll-contain rounded-t-2xl sm:rounded-2xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="font-bold flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-pink-500" /> Xếp lịch bằng AI (nhiều phương án)
               </h2>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Đóng">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Đóng" className="-mr-2 flex size-11 items-center justify-center">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-5 space-y-5">
+            <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-5">
               {/* Bước 1 */}
               <section className="space-y-3">
                 <h3 className="text-sm font-semibold">
@@ -187,7 +187,7 @@ export default function AIPromptButton({ subjectIds, onPlans }: Props) {
                   <select
                     value={campus}
                     onChange={(e) => setCampus(e.target.value as Campus | "")}
-                    className="flex-1 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm"
+                    className="flex-1 min-h-11 sm:min-h-0 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-base sm:text-sm"
                   >
                     <option value="">Không ưu tiên</option>
                     {CAMPUS_OPTIONS.map((o) => (
@@ -200,7 +200,7 @@ export default function AIPromptButton({ subjectIds, onPlans }: Props) {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Yêu cầu cụ thể, ưu tiên cao nhất (VD: ưu tiên thầy Đạt, môn Giải tích học sáng...)"
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full min-h-11 px-3 py-2 text-base sm:text-sm rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Thứ tự ưu tiên: ô ghi chú (giảng viên...) được xếp trước, sau đó mới đến các ô tick, cơ sở và gom ít ngày. Nếu mâu thuẫn, chatbot giữ yêu cầu cụ thể và hy sinh các mục sau (ví dụ chấp nhận học thứ 7 để có đúng giảng viên).
@@ -211,7 +211,7 @@ export default function AIPromptButton({ subjectIds, onPlans }: Props) {
                     <select
                       value={planCount}
                       onChange={(e) => setPlanCount(Number(e.target.value))}
-                      className="px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm"
+                      className="min-h-11 sm:min-h-0 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-base sm:text-sm"
                     >
                       {[3, 5, 8, 10].map((n) => (
                         <option key={n} value={n}>{n}</option>
@@ -222,7 +222,7 @@ export default function AIPromptButton({ subjectIds, onPlans }: Props) {
                     type="button"
                     disabled={subjectIds.length === 0}
                     onClick={handleCopy}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 min-h-11 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     {copied ? "Đã sao chép" : "Sao chép prompt"}
@@ -241,13 +241,13 @@ export default function AIPromptButton({ subjectIds, onPlans }: Props) {
                   }}
                   rows={4}
                   placeholder='{"plans": [{"name": "Phương án 1", "note": "...", "i": ["841476-01", "..."]}]}'
-                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 text-base sm:text-xs font-mono rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
                   type="button"
                   disabled={checking || !reply.trim()}
                   onClick={handleCheck}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex min-h-11 w-full sm:w-auto items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {checking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Kiểm tra và xem thử trên thời khóa biểu
