@@ -42,6 +42,9 @@ const getTotalCredits = (schedule: { [key: string]: ScheduleItem }): number => {
 
 
 
+const AGENT_SKILL_URL =
+  "https://raw.githubusercontent.com/huynhthanhtien/tkbsgu/main/public/skills/xep-tkb-sgu/SKILL.md";
+
 export default function HomePage() {
 
   const { getTkbList, addTkb, ready, removeTkb } = useIndexedDB();
@@ -200,7 +203,7 @@ export default function HomePage() {
 
   const handleCopyAgentPrompt = async () => {
     const origin = window.location.origin;
-    const prompt = `Hãy đọc và làm theo hướng dẫn tại ${origin}/skills/xep-tkb-sgu/SKILL.md.
+    const prompt = `Hãy đọc và làm theo hướng dẫn tại ${AGENT_SKILL_URL} (nếu không tải được, thử ${origin}/skills/xep-tkb-sgu/SKILL.md).
 
 Tôi muốn xếp thời khóa biểu SGU. Hãy hỏi tôi về các môn học và mong muốn của tôi trước khi bắt đầu.
 

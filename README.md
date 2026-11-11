@@ -9,7 +9,13 @@ Trong trang thời khóa biểu, nút **Prompt AI** tạo prompt để sử dụ
 3. Dán câu trả lời của chatbot vào ô kết quả và bấm **Kiểm tra và xem thử trên thời khóa biểu**.
 4. Ứng dụng kiểm tra mã lớp, số môn và xung đột trước khi cho xem thử và áp dụng từng phương án.
 
-Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Agent đọc `/skills/xep-tkb-sgu/SKILL.md`, tra danh mục `/agent-data/index.json` rồi tải từng môn cần dùng từ `/agent-data/subjects/<ma_mon>.json`. Agent cần quyền truy cập dữ liệu và khả năng tính toán.
+Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Skill `public/skills/xep-tkb-sgu/SKILL.md` dùng chung cho agent và chatbot, tự chọn chế độ theo khả năng:
+
+- **Agent có tải URL và chạy code**: dùng `scripts/tkb.py` (chỉ cần Python 3) để tìm môn, xem lớp, xếp và kiểm tra phương án, rồi in link.
+- **Agent chỉ tải được URL**: tải từng môn và tự xếp, tự kiểm tra từng cặp lớp.
+- **Chatbot thuần chat**: dùng nút **Prompt AI** (prompt đã chứa dữ liệu). Ô kết quả nhận cả JSON `{"plans": [...]}` lẫn link `?s=...&p=...`.
+
+Dữ liệu và skill được lấy từ GitHub raw trước (`raw.githubusercontent.com/huynhthanhtien/tkbsgu/main/public/...`), Vercel là dự phòng, vì Vercel đôi khi bị agent hoặc sandbox chặn.
 
 ## Cập nhật dữ liệu cho agent
 

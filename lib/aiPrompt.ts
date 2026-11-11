@@ -137,14 +137,18 @@ export function buildPlainLink(origin: string, s: string[], i: string[]): string
   return url.toString();
 }
 
-/** Tìm link dạng ?s=...&i=... trong văn bản; trả null nếu không có. */
-function extractPlainLink(text: string): { s: string[]; i: string[] } | null {
+/** Tìm link trong văn bản: dạng nhiều phương án ?s=..&p=..&p=.. hoặc dạng một phương án ?s=..&i=..; trả null nếu không có. */
+function extractPlainLink(text: string): { s: string[]; plans: string[][] } | null {
   const m = text.match(/https?:\/\/[^\s)>\]"']+/g) ?? [];
   for (const raw of m.reverse()) {
     try {
       const u = new URL(raw);
+      const ps = u.searchParams.getAll("p");
+      if (ps.length > 0) {
+        return { s: splitList(u.searchParams.get("s")), plans: ps.map(splitList) };
+      }
       if (u.searchParams.has("i")) {
-        return { s: splitList(u.searchParams.get("s")), i: splitList(u.searchParams.get("i")) };
+        return { s: splitList(u.searchParams.get("s")), plans: [splitList(u.searchParams.get("i"))] };
       }
     } catch {
       /* bỏ qua */
@@ -221,7 +225,7 @@ export function parsePlans(reply: string, requestedCodes: string[]): PlanResult[
   }
   if (raw.length === 0) {
     const link = extractPlainLink(reply);
-    if (link) raw.push({ name: "Phương án 1", i: link.i });
+    if (link) link.plans.forEach((i, k) => raw.push({ name: `Phương án ${k + 1}`, i }));
   }
 
   return raw.map((p) => ({ name: p.name!, note: p.note, ...validateSelection(requestedCodes, p.i) }));
@@ -240,7 +244,7 @@ export type ParseReplyResult =
 export function validateAiReply(reply: string, requestedCodes: string[]): ParseReplyResult {
   const plans = parsePlans(reply, requestedCodes);
   if (plans.length === 0) {
-    return { ok: false, error: 'Không tìm thấy JSON có trường "i" (hoặc link ?i=...) trong câu trả lời.' };
+    return { ok: false, error: 'Không tìm thấy JSON có trường "i" (hoặc link ?s=...&p=...) trong câu trả lời.' };
   }
   const best = plans.find((p) => p.payload) ?? plans[0];
   return { ok: true, validation: best.validation, problems: best.problems, payload: best.payload };
