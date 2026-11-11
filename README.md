@@ -9,7 +9,17 @@ Trong trang thời khóa biểu, nút **Prompt AI** tạo prompt để sử dụ
 3. Dán câu trả lời của chatbot vào ô kết quả và bấm **Kiểm tra và xem thử trên thời khóa biểu**.
 4. Ứng dụng kiểm tra mã lớp, số môn và xung đột trước khi cho xem thử và áp dụng từng phương án.
 
-Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Agent đọc `/skills/xep-tkb-sgu/SKILL.md` và dữ liệu `public/data.json` từ GitHub, rồi tạo link nhiều phương án. Agent cần quyền truy cập dữ liệu và khả năng tính toán.
+Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Agent đọc `/skills/xep-tkb-sgu/SKILL.md`, tra danh mục `/agent-data/index.json` rồi tải từng môn cần dùng từ `/agent-data/subjects/<ma_mon>.json`. Agent cần quyền truy cập dữ liệu và khả năng tính toán.
+
+## Cập nhật dữ liệu cho agent
+
+Sau khi cập nhật `public/data.json`, chạy:
+
+```bash
+python3 scripts/split_subjects.py
+```
+
+Script tạo danh mục gọn và các file môn trong `public/agent-data/`, không sửa file gốc. Đưa các file được tạo lên GitHub cùng `data.json` để Vercel phục vụ chúng. Script không xóa file môn cũ; chỉ các mã có trong `index.json` thuộc danh mục hiện tại. Có thể chỉ định đường dẫn khác bằng `--input` và `--output`.
 
 ## Chia sẻ nhiều phương án qua URL
 
