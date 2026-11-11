@@ -9,7 +9,7 @@ import { useState, useEffect } from "react"
 import { Toaster, toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { BookOpen, X, Calendar, User, MapPin } from "lucide-react"
+import { BookOpen, X, Calendar, User, MapPin, Sparkles } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ClassInfo, ScheduleItem } from "@/components/types"
 import { useSubjects } from "@/context/SubjectsContext"
@@ -17,6 +17,9 @@ import { useTkb } from "@/context/TkbContext";
 
 import SubjectSelector from "@/components/ui/search";
 import AddCalendar from "@/components/AddCalendar"
+import AIPromptButton from "@/components/AIPromptButton"
+import { TkbsDecode } from "@/utils/compressor"
+import type { PlanResult } from "@/lib/aiPrompt"
 
 const arr_start_time = [
   "00:00", "07:00", "07:50", "09:00", "09:50", "10:40",
@@ -66,8 +69,85 @@ const colorClassesHighlight = {
 
 export default function SchedulePlanner() {
 
-  const { selectedSubjects, addSubject, removeSubject, schedule, setSchedule } = useSubjects();
+  const { selectedSubjects, addSubject, removeSubject, schedule: realSchedule, setSchedule: setRealSchedule } = useSubjects();
   const { selectedTkb, setSelectedTkb } = useTkb();
+
+  // ---- Các phương án do AI đề xuất: lưu trong localStorage theo từng thời khóa biểu; xem thử không ghi vào lịch thật cho đến khi bấm Áp dụng ----
+  // Phương án gắn với danh sách môn lúc tạo; danh sách môn đổi thì tạm ẩn (suy ra khi render, không dùng effect).
+  const subjectsKey = selectedSubjects.map((s) => s.id).join(",");
+  const [planState, setPlanState] = useState<{
+    key: string;
+    plans: PlanResult[];
+    previews: ({ [key: string]: ScheduleItem } | null)[];
+  } | null>(null);
+  const [activePlan, setActivePlan] = useState<number | null>(null);
+  const planActive = planState !== null && planState.key === subjectsKey;
+  const plans = planActive ? planState.plans : null;
+  const preview =
+    planActive && activePlan !== null ? planState.previews[activePlan] ?? null : null;
+  const currentPlan = plans && activePlan !== null ? plans[activePlan] ?? null : null;
+  const schedule = preview ?? realSchedule;
+  const setSchedule: typeof setRealSchedule = (v) => {
+    if (preview) {
+      toast.warning("Đang xem thử phương án AI. Hãy bấm Áp dụng hoặc Bỏ xem thử trước khi chỉnh sửa.");
+      return;
+    }
+    setRealSchedule(v);
+  };
+  const plansStorageKey = selectedTkb ? `tkb-ai-plans:${selectedTkb.id}` : null;
+  const buildPreviews = (res: PlanResult[]) =>
+    res.map((p) => {
+      try {
+        return p.payload ? TkbsDecode(p.payload.s, p.payload.i).ScheduleItem : null;
+      } catch {
+        return null;
+      }
+    });
+  // Nạp lại các phương án đã lưu khi mở thời khóa biểu
+  useEffect(() => {
+    if (!plansStorageKey) return;
+    try {
+      const raw = localStorage.getItem(plansStorageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { key: string; plans: PlanResult[] };
+      if (!saved || typeof saved.key !== "string" || !Array.isArray(saved.plans)) return;
+      setPlanState({ key: saved.key, plans: saved.plans, previews: buildPreviews(saved.plans) });
+    } catch {
+      /* dữ liệu lưu hỏng: bỏ qua */
+    }
+  }, [plansStorageKey]);
+  const stopPreview = () => setActivePlan(null);
+  const deletePlans = () => {
+    setPlanState(null);
+    setActivePlan(null);
+    if (plansStorageKey) {
+      try {
+        localStorage.removeItem(plansStorageKey);
+      } catch {
+        /* bỏ qua */
+      }
+    }
+    toast.success("Đã xóa các phương án đã lưu.");
+  };
+  const handlePlans = (res: PlanResult[]) => {
+    const pv = buildPreviews(res);
+    setPlanState({ key: subjectsKey, plans: res, previews: pv });
+    const first = pv.findIndex((x) => x);
+    setActivePlan(first >= 0 ? first : 0);
+    if (plansStorageKey) {
+      try {
+        localStorage.setItem(plansStorageKey, JSON.stringify({ key: subjectsKey, plans: res }));
+      } catch {
+        toast.warning("Không thể lưu các phương án (bộ nhớ trình duyệt đầy hoặc bị chặn).");
+      }
+    }
+  };
+  const handleApplyPlan = () => {
+    if (!currentPlan || !preview) return;
+    setRealSchedule(preview);
+    toast.success(`Đã áp dụng ${currentPlan.name} vào thời khóa biểu.`);
+    setActivePlan(null);
+  };
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, subject: any | null }>({ open: false, subject: null });
   // const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
@@ -640,6 +720,10 @@ export default function SchedulePlanner() {
                         return `Tín chỉ: ${total}`;
                       })()}
                     </div>
+                    <AIPromptButton
+                      subjectIds={selectedSubjects.map((s) => s.id)}
+                      onPlans={handlePlans}
+                    />
                     <button
                       className="p-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 text-lg flex items-center justify-center"
                       aria-label="Chụp ảnh thời khóa biểu"
@@ -679,6 +763,78 @@ export default function SchedulePlanner() {
                     </button>
                   </div>
                 </CardHeader>
+                {plans && (
+                  <div className="mx-6 mt-3 p-3 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                        <Sparkles className="w-4 h-4" /> Phương án AI đã lưu:
+                      </span>
+                      {plans.map((p, k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          role="tab"
+                          aria-selected={k === activePlan}
+                          onClick={() => setActivePlan(k)}
+                          className={`px-3 py-1 rounded-lg text-sm border transition ${
+                            k === activePlan
+                              ? "bg-indigo-600 text-white border-indigo-600"
+                              : "border-gray-300 dark:border-gray-600 hover:bg-white/60 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          {p.name} {p.payload ? "✓" : "✗"}
+                        </button>
+                      ))}
+                      <div className="ml-auto flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={!preview}
+                          onClick={handleApplyPlan}
+                          className="px-3 py-1 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Áp dụng
+                        </button>
+                        <button
+                          type="button"
+                          disabled={activePlan === null}
+                          onClick={stopPreview}
+                          className="px-3 py-1 rounded-lg text-sm border border-gray-300 dark:border-gray-600 hover:bg-white/60 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Bỏ xem thử
+                        </button>
+                        <button
+                          type="button"
+                          onClick={deletePlans}
+                          className="px-3 py-1 rounded-lg text-sm border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
+                        >
+                          Xóa phương án
+                        </button>
+                      </div>
+                    </div>
+                    {!currentPlan && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Đang hiển thị lịch hiện tại. Bấm một phương án để xem thử trên thời khóa biểu. Các phương án được lưu trong trình duyệt, thoát ra vào lại vẫn còn.
+                      </p>
+                    )}
+                    {currentPlan?.note && (
+                      <p className="text-xs italic text-gray-700 dark:text-gray-300">AI: {currentPlan.note}</p>
+                    )}
+                    {currentPlan &&
+                      (currentPlan.payload ? (
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          Đang xem thử, chưa áp dụng. Học {currentPlan.validation.uniqueDays.length} ngày ({currentPlan.validation.uniqueDays.join(", ")}). Bấm Áp dụng để thay thế lịch hiện tại.
+                        </p>
+                      ) : (
+                        <ul className="text-xs text-amber-800 dark:text-amber-300 list-disc list-inside">
+                          <li className="list-none font-semibold">Phương án này không hợp lệ nên không xem thử/áp dụng được:</li>
+                          {currentPlan.problems.map((m, k) => <li key={k}>{m}</li>)}
+                          {currentPlan.validation.unscheduledSubjects.map((u) => (
+                            <li key={u.ma_mon}>Chưa xếp: {u.ten_mon} ({u.ma_mon})</li>
+                          ))}
+                        </ul>
+                      ))}
+                  </div>
+                )}
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <div className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">

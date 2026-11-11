@@ -1,36 +1,66 @@
 import {
+  Campus,
+  RawClass,
   RawSubject,
   UserPreferences,
   getAllSubjects,
-  RawClass,
   validateSchedule,
   classesOverlap,
   ScheduleValidationResult,
 } from "@/lib/scheduler";
 
-/** Mô tả ưu tiên bằng tiếng Việt để đưa vào prompt. */
+export const CAMPUS_OPTIONS: { value: Campus; label: string }[] = [
+  { value: "cs1", label: "Cơ sở 1 (CS1, phòng 1.x)" },
+  { value: "cs2", label: "Cơ sở 2 (CS2, phòng 2.x)" },
+  { value: "main", label: "Cơ sở chính (phòng C.x)" },
+];
+
+const CAMPUS_SHORT: Record<Campus, string> = { cs1: "CS1", cs2: "CS2", main: "CS chính" };
+
+/** Suy cơ sở từ tên phòng: "Ph 1.C202" -> cs1, "Ph 2.B301" -> cs2, "Ph C.A201" -> main. Khác -> undefined. */
+export function campusOfRoom(room?: string): Campus | undefined {
+  const m = (room ?? "").match(/^\s*Ph\s+([^.\s]+)\./i);
+  if (!m) return undefined;
+  const k = m[1].toUpperCase();
+  return k === "1" ? "cs1" : k === "2" ? "cs2" : k === "C" ? "main" : undefined;
+}
+
+/** Mô tả ưu tiên bằng tiếng Việt để đưa vào prompt (đã sắp theo thứ tự quan trọng). */
 function describePreferences(p: UserPreferences): string[] {
   const out: string[] = [];
   if (p.avoidMondayMorning) out.push("Tránh học sáng thứ Hai (Thứ 2, tiết 1-5).");
   if (p.avoidMorning) out.push("Tránh học ca sáng (tiết 1-5).");
   if (p.avoidAfternoon) out.push("Tránh học ca chiều (tiết 6-10).");
   if (p.avoidWeekend) out.push("Tránh học cuối tuần (Thứ 7, Chủ nhật).");
-  if (p.minimizeDays) out.push("Ưu tiên ít ngày/buổi học nhất (gom lịch).");
-  if (p.customNote?.trim()) out.push(`Ghi chú thêm: ${p.customNote.trim()}`);
+  if (p.campus) {
+    out.push(
+      `Ưu tiên học tại ${CAMPUS_SHORT[p.campus]}: chọn lớp có phòng ở ${CAMPUS_SHORT[p.campus]} càng nhiều càng tốt (cột "CS" trong dữ liệu cho biết cơ sở của từng buổi).`
+    );
+  }
+  if (p.minimizeDays) {
+    out.push(
+      "Gom lịch vào ÍT NGÀY HỌC NHẤT: dồn càng nhiều môn vào cùng một ngày càng tốt (ví dụ 4 môn học trong 2 ngày tốt hơn 4 môn rải trong 4 ngày). Dùng số ngày học khác nhau làm thước đo."
+    );
+  }
   return out;
 }
 
-/** Gộp các buổi liền nhau/trùng nhau cùng thứ, trả về "Thứ 5: tiết 1,2,3,4,5". */
+/** Gộp các buổi cùng thứ, trả về "Thứ 5: tiết 1,2,3 (CS1)". */
 function describeSlots(cls: RawClass): string {
-  const byDay = new Map<string, Set<number>>();
+  const byDay = new Map<string, { periods: Set<number>; campuses: Set<string> }>();
   for (const t of cls.tkb) {
-    const set = byDay.get(t.thu) ?? new Set<number>();
-    for (let p = t.tbd; p <= t.tkt; p++) set.add(p);
-    byDay.set(t.thu, set);
+    const e = byDay.get(t.thu) ?? { periods: new Set<number>(), campuses: new Set<string>() };
+    for (let p = t.tbd; p <= t.tkt; p++) e.periods.add(p);
+    const c = campusOfRoom(t.phong);
+    e.campuses.add(c ? CAMPUS_SHORT[c] : (t.phong || "?").replace(/^Ph\s+/i, ""));
+    byDay.set(t.thu, e);
   }
   return (
     Array.from(byDay.entries())
-      .map(([day, set]) => `${day}: tiết ${Array.from(set).sort((x, y) => x - y).join(",")}`)
+      .map(
+        ([day, e]) =>
+          `${day}: tiết ${Array.from(e.periods).sort((x, y) => x - y).join(",")} (${Array.from(e.campuses).join("/")})`
+      )
       .join(" | ") || "(chưa có lịch)"
   );
 }
@@ -57,42 +87,41 @@ function describeSubject(s: RawSubject, all: RawSubject[]): string {
 export function buildAiPrompt(
   subjectCodes: string[],
   preferences: UserPreferences,
-  origin = "http://localhost:3000"
+  planCount = 5
 ): string {
   const map = new Map(getAllSubjects().map((s) => [s.ma_mon, s]));
   const subjects = subjectCodes.map((c) => map.get(c)).filter((s): s is RawSubject => !!s);
-  const prefs = describePreferences(preferences);
-  const first = subjects[0];
-  const example = first
-    ? `{"s": ["${first.ma_mon}"], "i": ["${first.ma_mon}-${first.lop[0]?.nhom_to ?? "01"}"]}`
-    : '{"s": ["801022"], "i": ["801022-01"]}';
+  const note = preferences.customNote?.trim();
+  const generic = describePreferences({ ...preferences, customNote: undefined });
+  const exampleIds = JSON.stringify(
+    subjects.slice(0, 2).map((x) => `${x.ma_mon}-${x.lop[0]?.nhom_to ?? "01"}`)
+  );
 
-  return `Bạn là trợ lý xếp thời khóa biểu đại học. Chọn đúng MỘT lớp cho MỖI môn trong ${subjects.length} môn dưới đây.
+  return `Bạn là trợ lý xếp thời khóa biểu đại học. Hãy đề xuất ${planCount} phương án KHÁC NHAU, mỗi phương án chọn đúng MỘT lớp cho MỖI môn trong ${subjects.length} môn dưới đây.
 
-RÀNG BUỘC CỨNG (bắt buộc, ưu tiên cao hơn mọi ưu tiên khác):
+RÀNG BUỘC CỨNG (bắt buộc cho mọi phương án, luôn cao hơn mọi ưu tiên):
 1. Chỉ dùng mã môn và ID lớp có trong dữ liệu. Không tự bịa mã.
 2. Mỗi môn chọn đúng 1 lớp, tức là đủ ${subjects.length} ID.
 3. Hai lớp đã chọn KHÔNG được trùng tiết: cùng thứ và có ít nhất một số tiết chung. Mỗi lớp đã liệt kê sẵn danh sách "TRÙNG VỚI" gồm các lớp của môn khác mà nó xung đột. Nếu lớp A có B trong "TRÙNG VỚI" thì không được chọn cả A và B.
+4. Các phương án phải khác nhau (khác ít nhất một lớp), xếp từ tốt nhất đến kém hơn.
 
-ƯU TIÊN MỀM (cố gắng đạt được, nhưng không được vi phạm ràng buộc cứng):
-${prefs.length ? prefs.map((p) => `- ${p}`).join("\n") : "- (không có)"}
+THỨ TỰ ƯU TIÊN MỀM (từ quan trọng nhất đến ít quan trọng nhất; khi mâu thuẫn thì mục trên thắng mục dưới):
+${note ? `1. YÊU CẦU CỤ THỂ CỦA TÔI (giảng viên, môn, ngày... ): ${note}\n   Đây là ưu tiên cao nhất trong nhóm mềm: hãy thỏa mãn nó trước, kể cả phải hy sinh các mục bên dưới.` : "1. (không có yêu cầu cụ thể về giảng viên/môn)"}
+2. Các mong muốn chung, cố gắng đạt được sau khi đã thỏa mục 1:
+${generic.length ? generic.map((p) => `   - ${p}`).join("\n") : "   - (không có)"}
+Ví dụ: nếu tôi ưu tiên một giảng viên mà lớp của giảng viên đó buộc phải học thứ 7, hãy chọn lớp đó và chấp nhận học thứ 7, không bỏ giảng viên chỉ để tránh thứ 7. Trường "note" của mỗi phương án phải nói ngắn gọn ưu tiên nào đã đạt, ưu tiên nào phải hy sinh.
 
 CÁCH LÀM:
-- Bước 1: chọn lớp lần lượt, bắt đầu từ môn có ít lớp nhất. Sau mỗi lần chọn, loại các lớp nằm trong "TRÙNG VỚI" của lớp vừa chọn.
-- Bước 2: nếu một môn không còn lớp nào, quay lui và đổi lớp đã chọn trước đó.
-- Bước 3: trong các phương án hợp lệ, chọn phương án thỏa nhiều ưu tiên mềm nhất.
-- Bước 4: kiểm tra lại từng cặp lớp đã chọn: không có lớp nào xuất hiện trong "TRÙNG VỚI" của lớp khác.
+- Chọn lớp lần lượt, bắt đầu từ môn có ít lớp nhất. Sau mỗi lần chọn, loại các lớp nằm trong "TRÙNG VỚI" của lớp vừa chọn. Nếu một môn không còn lớp nào thì quay lui.
+- Với mỗi phương án, kiểm tra lại từng cặp lớp đã chọn: không có lớp nào xuất hiện trong "TRÙNG VỚI" của lớp khác.
 
-DỮ LIỆU (định dạng: ID | thứ: các tiết | giảng viên | TRÙNG VỚI):
+DỮ LIỆU (định dạng: ID | thứ: các tiết (cơ sở CS) | giảng viên | TRÙNG VỚI):
 ${subjects.map((s) => describeSubject(s, subjects)).join("\n")}
 
 ĐỊNH DẠNG TRẢ LỜI:
-Bạn có thể tính toán ngắn gọn, nhưng KẾT THÚC bằng đúng hai dòng, không viết gì sau chúng:
-1. Một link theo mẫu, thay phần danh sách bằng kết quả của bạn (dấu phẩy, không có khoảng trắng, không mã hóa gì thêm):
-${buildPlainLink(origin, subjects.map((x) => x.ma_mon), subjects.map((x) => `${x.ma_mon}-${x.lop[0]?.nhom_to ?? "01"}`))}
-   Tham số "s" là danh sách mã môn, "i" là danh sách ID lớp đã chọn (mỗi môn một ID). Giữ nguyên phần địa chỉ ${origin}/?.
-2. Cùng nội dung ở dạng JSON: ${example}
-Nếu thật sự không thể xếp đủ các môn mà không trùng tiết, chỉ đưa các môn xếp được và nói rõ môn nào bị bỏ.`;
+Bạn có thể tính toán ngắn gọn, nhưng KẾT THÚC bằng đúng một khối JSON ở cuối câu trả lời, không viết gì sau nó:
+{"plans": [{"name": "Phương án 1", "note": "<ưu tiên đạt/hy sinh>", "i": ${exampleIds}}, ...]}
+"i" là danh sách ID lớp đã chọn (mỗi môn đúng một ID). Cần đủ ${planCount} phương án nếu có thể; nếu không đủ phương án hợp lệ thì trả ít hơn và nói rõ lý do.`;
 }
 
 /** Tách danh sách phân cách bằng dấu phẩy: "a,b, c" -> ["a","b","c"]. */
@@ -124,28 +153,15 @@ function extractPlainLink(text: string): { s: string[]; i: string[] } | null {
   return null;
 }
 
-export type ParseReplyResult =
-  | { ok: false; error: string }
-  | {
-      ok: true;
-      validation: ScheduleValidationResult;
-      /** Dữ liệu {s, i} chỉ có giá trị khi lịch hợp lệ và đủ môn. */
-      payload?: { s: string[]; i: string[] };
-      problems: string[];
-    };
-
-/** Lấy object JSON có trường "i" cuối cùng trong câu trả lời (chấp nhận ```json fences / chữ thừa / lời giải thích có dấu {}). */
-function extractJson(text: string): unknown {
+/** Lấy mọi object JSON cấp cao nhất trong văn bản (chịu được ```json fences, lời giải thích, dấu {} thừa). */
+function extractJsonObjects(text: string): unknown[] {
   const t = text.trim();
-  try {
-    return JSON.parse(t);
-  } catch {
-    /* thử tách khối */
-  }
-  const found: unknown[] = [];
-  for (let start = t.indexOf("{"); start !== -1; start = t.indexOf("{", start + 1)) {
+  const out: unknown[] = [];
+  let start = t.indexOf("{");
+  while (start !== -1) {
     let depth = 0;
     let inStr = false;
+    let end = -1;
     for (let k = start; k < t.length; k++) {
       const ch = t[k];
       if (inStr) {
@@ -154,52 +170,80 @@ function extractJson(text: string): unknown {
       } else if (ch === '"') inStr = true;
       else if (ch === "{") depth++;
       else if (ch === "}" && --depth === 0) {
-        try {
-          const o = JSON.parse(t.slice(start, k + 1));
-          if (o && typeof o === "object" && "i" in o) found.push(o);
-        } catch {
-          /* bỏ qua khối không phải JSON */
-        }
+        end = k;
         break;
       }
     }
+    if (end === -1) break;
+    try {
+      out.push(JSON.parse(t.slice(start, end + 1)));
+      start = t.indexOf("{", end + 1);
+    } catch {
+      start = t.indexOf("{", start + 1); // khối không phải JSON: thử từ dấu { tiếp theo
+    }
   }
-  if (found.length === 0) throw new Error("Không tìm thấy JSON có trường \"i\" trong câu trả lời.");
-  return found[found.length - 1];
+  return out;
 }
 
-/** Kiểm tra câu trả lời của chatbot dựa trên dữ liệu thật và các môn đã yêu cầu. */
-export function validateAiReply(
-  reply: string,
-  requestedCodes: string[]
-): ParseReplyResult {
-  let raw: unknown;
-  try {
-    raw = extractJson(reply);
-  } catch (e) {
-    raw = extractPlainLink(reply);
-    if (!raw) {
-      return { ok: false, error: e instanceof Error ? e.message : "JSON không hợp lệ." };
+export interface PlanResult {
+  name: string;
+  note?: string;
+  validation: ScheduleValidationResult;
+  problems: string[];
+  /** Chỉ có khi lịch hợp lệ và đủ môn. */
+  payload?: { s: string[]; i: string[] };
+}
+
+const isStrArr = (v: unknown): v is string[] =>
+  Array.isArray(v) && v.every((x) => typeof x === "string");
+
+/** Đọc câu trả lời của chatbot thành danh sách phương án đã được kiểm tra bằng dữ liệu thật. */
+export function parsePlans(reply: string, requestedCodes: string[]): PlanResult[] {
+  const raw: { name?: string; note?: string; i: string[] }[] = [];
+  const pushPlan = (o: unknown, fallbackName: string) => {
+    const p = o as { name?: unknown; note?: unknown; i?: unknown };
+    if (p && typeof p === "object" && isStrArr(p.i)) {
+      raw.push({
+        name: typeof p.name === "string" && p.name.trim() ? p.name.trim() : fallbackName,
+        note: typeof p.note === "string" ? p.note : undefined,
+        i: p.i.map((x) => x.trim()),
+      });
+    }
+  };
+
+  for (const obj of extractJsonObjects(reply)) {
+    const o = obj as { plans?: unknown };
+    if (o && Array.isArray(o.plans)) {
+      o.plans.forEach((p) => pushPlan(p, `Phương án ${raw.length + 1}`));
+    } else {
+      pushPlan(obj, `Phương án ${raw.length + 1}`);
     }
   }
-  const obj = raw as { s?: unknown; i?: unknown };
-  const isStrArr = (v: unknown): v is string[] =>
-    Array.isArray(v) && v.every((x) => typeof x === "string");
-  if (!isStrArr(obj?.i)) {
-    return { ok: false, error: 'JSON phải có trường "i" là mảng ID lớp (chuỗi).' };
+  if (raw.length === 0) {
+    const link = extractPlainLink(reply);
+    if (link) raw.push({ name: "Phương án 1", i: link.i });
   }
-  const ids = obj.i.map((x) => x.trim());
-  const extra: string[] = [];
-  if (isStrArr(obj.s)) {
-    const requested = new Set(requestedCodes);
-    for (const c of obj.s) {
-      if (!requested.has(c.trim())) extra.push(`Mã môn '${c}' không nằm trong danh sách đã chọn.`);
-    }
+
+  return raw.map((p) => ({ name: p.name!, note: p.note, ...validateSelection(requestedCodes, p.i) }));
+}
+
+export type ParseReplyResult =
+  | { ok: false; error: string }
+  | {
+      ok: true;
+      validation: ScheduleValidationResult;
+      payload?: { s: string[]; i: string[] };
+      problems: string[];
+    };
+
+/** Kiểm tra câu trả lời: lấy phương án hợp lệ đầu tiên (hoặc phương án đầu tiên nếu không có cái nào hợp lệ). */
+export function validateAiReply(reply: string, requestedCodes: string[]): ParseReplyResult {
+  const plans = parsePlans(reply, requestedCodes);
+  if (plans.length === 0) {
+    return { ok: false, error: 'Không tìm thấy JSON có trường "i" (hoặc link ?i=...) trong câu trả lời.' };
   }
-  const res = validateSelection(requestedCodes, ids);
-  res.problems.unshift(...extra);
-  if (extra.length) res.payload = undefined;
-  return { ok: true, ...res };
+  const best = plans.find((p) => p.payload) ?? plans[0];
+  return { ok: true, validation: best.validation, problems: best.problems, payload: best.payload };
 }
 
 /** Kiểm tra danh sách ID lớp so với các môn yêu cầu; chỉ có payload khi lịch hợp lệ và đủ môn. */

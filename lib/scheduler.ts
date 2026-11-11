@@ -22,12 +22,16 @@ export interface RawSubject {
   lop: RawClass[];
 }
 
+export type Campus = "cs1" | "cs2" | "main";
+
 export interface UserPreferences {
   avoidMondayMorning?: boolean;
   avoidMorning?: boolean;
   avoidAfternoon?: boolean;
   minimizeDays?: boolean;
   avoidWeekend?: boolean;
+  /** Cơ sở ưu tiên: cs1 = phòng "1.x", cs2 = "2.x", main = cơ sở chính "C.x". */
+  campus?: Campus;
   customNote?: string;
 }
 

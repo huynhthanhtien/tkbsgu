@@ -7,11 +7,10 @@ import { useIndexedDB } from "@/context/IndexedDBContext";
 import { Tkb, Subject, ScheduleItem } from "@/components/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Sparkles } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { Compressor, TkbsDecode } from "@/utils/compressor";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
-import AIScheduleModal from "@/components/AIScheduleModal";
 import { splitList, validateSelection } from "@/lib/aiPrompt";
 
 // import { getSubjectById } from "@/components/ui/search"
@@ -50,7 +49,6 @@ export default function HomePage() {
   const [shareSchedules, setShareSchedules] = useState<Tkb>();
   const router = useRouter();
   const [showPopup, setShowPopup] = useState(false);
-  const [showAiModal, setShowAiModal] = useState(false);
   const [name, setName] = useState("");
   const [shareName, setShareName] = useState("");
   // import popup
@@ -201,7 +199,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col justify-between text-white font-sans animate-fadeIn">
+    <div className="min-h-screen bg-black flex flex-col justify-between text-white font-sans animate-fadeIn">
       <div className="flex flex-col items-center py-10">
         {/* Card giới thiệu */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl text-center max-w-2xl mb-10">
@@ -222,14 +220,6 @@ export default function HomePage() {
           >
             <PlusCircleIcon className="w-6 h-6" />
             Tạo Thời Khóa Biểu Mới
-          </button>
-
-          <button
-            onClick={() => setShowAiModal(true)}
-            className="flex items-center gap-3 bg-gradient-to-r from-amber-400 via-rose-500 to-purple-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 border border-white/20"
-          >
-            <Sparkles className="w-6 h-6 text-yellow-200 animate-pulse" />
-            AI Xếp Thời Khóa Biểu
           </button>
         </div>
 
@@ -374,11 +364,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-      {/* AI Schedule Modal */}
-      <AIScheduleModal
-        isOpen={showAiModal}
-        onClose={() => setShowAiModal(false)}
-      />
     </div>
   );
 }
