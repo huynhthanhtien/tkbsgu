@@ -70,6 +70,35 @@ def fold(text):
     return "".join(c for c in text if unicodedata.category(c) != "Mn").lower()
 
 
+ROMAN = {"i": "1", "ii": "2", "iii": "3", "iv": "4", "v": "5", "vi": "6"}
+
+
+def tokens(text):
+    """Tách từ không dấu; số La Mã (nguyên từ) đổi thành số: 'Giải tích II' -> ['giai','tich','2']."""
+    return [ROMAN.get(t, t) for t in re.findall(r"[a-z0-9]+", fold(text))]
+
+
+def search_subjects(index, query):
+    """Khớp theo TÊN môn (hoặc mã nếu truy vấn là mã). Số phải khớp nguyên từ; chữ khớp tiền tố.
+    Xếp: tên trùng hoàn toàn < tên bắt đầu bằng truy vấn < còn lại."""
+    q = tokens(query)
+    if not q:
+        return []
+    out = []
+    for m in index:
+        if fold(m["ma_mon"]) == fold(query).strip():
+            out.append((-1, m))
+            continue
+        n = tokens(m["ten_mon"])
+        ok = all(any(t == w or (not w.isdigit() and len(w) >= 2 and t.startswith(w)) for t in n) for w in q)
+        if not ok:
+            continue
+        rank = 0 if n == q else 1 if n[: len(q)] == q else 2
+        out.append((rank, m))
+    out.sort(key=lambda x: (x[0], len(x[1]["ten_mon"])))
+    return [m for _, m in out]
+
+
 def campus(room):
     m = re.match(r"\s*Ph\s+([^.\s]+)\.", room or "", re.I)
     return {"1": "cs1", "2": "cs2", "C": "main"}.get(m.group(1).upper()) if m else None
@@ -176,6 +205,39 @@ def penalty(chosen, a):
     return pen, sorted(set(notes))
 
 
+def signature(chosen):
+    """(tập lớp, tập ngày học) của một phương án, để đo độ khác nhau."""
+    ids = {f"{s['ma_mon']}-{c['nhom_to']}" for s, c in chosen}
+    days = frozenset(t["thu"] for _, c in chosen for t in c["tkb"])
+    return ids, days
+
+
+def distance(x, y):
+    # khác bao nhiêu lớp, cộng thêm nếu khác tập ngày học (khác kiểu lịch quan trọng hơn)
+    return len(x[0] ^ y[0]) // 2 + (3 if x[1] != y[1] else 0)
+
+
+def pick_diverse(scored, n, diversify=True):
+    """Chọn n phương án. ƯU TIÊN LÀ TRÊN HẾT: duyệt theo từng nhóm cùng điểm phạt từ thấp đến cao,
+    chỉ khi hết phương án ở nhóm tốt hơn mới sang nhóm kém hơn. Trong cùng một nhóm điểm mới
+    chọn theo kiểu 'xa nhất' để các phương án khác nhau về lớp và ngày học."""
+    picked, i = [], 0
+    while i < len(scored) and len(picked) < n:
+        j = i
+        while j < len(scored) and scored[j][0][0] == scored[i][0][0]:
+            j += 1
+        tier = [(sc, ch, signature(ch)) for sc, ch in scored[i:j]]
+        i = j
+        while tier and len(picked) < n:
+            if not diversify or not picked:
+                best = 0
+            else:
+                best = max(range(len(tier)),
+                           key=lambda k: min(distance(tier[k][2], p[2]) for p in picked))
+            picked.append(tier.pop(best))
+    return [(sc, ch) for sc, ch, _ in picked]
+
+
 def solve(subjects, a):
     pools = []
     for s in subjects:
@@ -234,6 +296,8 @@ def main():
     p.add_argument("--campus", choices=["cs1", "cs2", "main"])
     p.add_argument("--prefer-teacher", action="append", help="một phần tên giảng viên")
     p.add_argument("--avoid-teacher", action="append")
+    p.add_argument("--no-diversify", action="store_true",
+                   help="tắt chọn đa dạng; chỉ lấy theo điểm phạt")
     p.add_argument("--max-steps", type=int, default=2_000_000)
 
     p = sub.add_parser("check")
@@ -244,8 +308,7 @@ def main():
     src = Source(a.base or BASES, a.data_dir)
 
     if a.cmd == "search":
-        keys = [fold(k) for k in a.query]
-        hits = [m for m in src.index() if all(k in fold(m["ma_mon"] + " " + m["ten_mon"]) for k in keys)]
+        hits = search_subjects(src.index(), " ".join(a.query))
         print(json.dumps({"so_ket_qua": len(hits), "ket_qua": hits[: a.limit]}, ensure_ascii=False, indent=1))
         return
 
@@ -273,7 +336,7 @@ def main():
             sys.exit(2)
         order = {s["ma_mon"]: i for i, s in enumerate(subjects)}
         plans = []
-        for (pen, notes), chosen in scored[: a.plans]:
+        for (pen, notes), chosen in pick_diverse(scored, a.plans, not a.no_diversify):
             chosen.sort(key=lambda sc: order[sc[0]["ma_mon"]])
             plans.append({"ids": [f"{s['ma_mon']}-{c['nhom_to']}" for s, c in chosen],
                           "diem_phat": pen, "chua_dat": notes})
