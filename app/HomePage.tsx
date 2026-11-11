@@ -200,7 +200,7 @@ export default function HomePage() {
 
   const handleCopyAgentPrompt = async () => {
     const origin = window.location.origin;
-    const prompt = `Hãy đọc và làm theo hướng dẫn tại ${origin}/agent-guide.md.
+    const prompt = `Hãy đọc và làm theo hướng dẫn tại ${origin}/skills/xep-tkb-sgu/SKILL.md.
 
 Tôi muốn xếp thời khóa biểu SGU. Hãy hỏi tôi về các môn học và mong muốn của tôi trước khi bắt đầu.
 
