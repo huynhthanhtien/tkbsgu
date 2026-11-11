@@ -13,11 +13,13 @@ Tải `scripts/tkb.py` từ thư mục skill. Chỉ cần Python 3, không cài 
 ```bash
 python3 tkb.py search giai tich             # tìm mã môn (dùng để lập bảng xác nhận)
 python3 tkb.py show 841404 841407           # lớp, lịch, giảng viên, cơ sở (co_so), dung_duoc
-python3 tkb.py solve 841404 841407 801145 -n 5 \
+python3 tkb.py solve 841404 841407 801145 --confirmed -n 5 \
     --avoid-monday-morning --avoid-weekend --minimize-days \
     --campus cs1 --prefer-teacher "Đạt" --avoid-day "Thứ 7"
-python3 tkb.py check --s 841404,841407 --p 841404-01,841407-01 --p 841404-02,841407-01
+python3 tkb.py check --confirmed --s 841404,841407 --p 841404-01,841407-01 --p 841404-02,841407-01
 ```
+
+`solve` và `check` **từ chối chạy** nếu thiếu `--confirmed`. Chỉ thêm cờ này sau khi người dùng đã duyệt bảng mã môn; không tự thêm để cho qua.
 
 Cờ của `solve`: `--avoid-monday-morning`, `--avoid-morning`, `--avoid-afternoon`, `--avoid-weekend`, `--avoid-day "Thứ N"` (lặp lại được), `--minimize-days`, `--campus {cs1,cs2,main}`, `--prefer-teacher`, `--avoid-teacher`, `--no-diversify`, `--max-steps`.
 

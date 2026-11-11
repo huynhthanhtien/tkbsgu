@@ -16,7 +16,7 @@ https://tkbsgu.vercel.app/?s=841404,841407&p=841404-01,841407-01&p=841404-02,841
 ## Nội dung trả lời
 
 - **Một link**.
-- Mã môn đã chọn, số môn, tổng tín chỉ (mỗi môn cộng một lần), số phương án thực tế.
+- Danh sách môn đã chọn, mỗi môn ghi `mã môn – tên môn đầy đủ nguyên văn từ index.json` (không viết tắt, không dùng cách gọi của người dùng); số môn, tổng tín chỉ (mỗi môn cộng một lần), số phương án thực tế.
 - Ưu tiên đã đạt / chưa đạt / không kiểm tra được, và các đánh đổi.
 - Nếu tìm kiếm bị cắt sớm hoặc không đủ số phương án yêu cầu, nói rõ.
 - Hướng dẫn: mở link, đặt tên, bấm **Lưu**, chọn phương án xem thử rồi bấm **Áp dụng**. Lịch lưu trong trình duyệt của người dùng; link không lưu tên hay ghi chú từng phương án.

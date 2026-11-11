@@ -4,8 +4,8 @@
 Lệnh:
   tkb.py search <từ khóa>...             tìm môn theo tên/mã (không phân biệt hoa thường, bỏ dấu)
   tkb.py show <ma_mon>...                liệt kê lớp, lịch, giảng viên, cơ sở của từng môn
-  tkb.py solve <ma_mon>... [tùy chọn]    tìm tối đa N phương án hợp lệ, xếp theo ưu tiên, in link
-  tkb.py check --s a,b --p a-01,b-01 [--p ...]   kiểm tra phương án có sẵn, in link
+  tkb.py solve <ma_mon>... --confirmed [tùy chọn]    tìm tối đa N phương án hợp lệ, xếp theo ưu tiên, in link
+  tkb.py check --confirmed --s a,b --p a-01,b-01 [--p ...]   kiểm tra phương án có sẵn, in link
 
 Nguồn dữ liệu (thử lần lượt, mặc định GitHub trước rồi Vercel; đổi bằng --base hoặc --data-dir):
   https://raw.githubusercontent.com/huynhthanhtien/tkbsgu/main/public/agent-data
@@ -286,6 +286,8 @@ def main():
 
     p = sub.add_parser("solve")
     p.add_argument("codes", nargs="+")
+    p.add_argument("--confirmed", action="store_true",
+                   help="BẮT BUỘC: xác nhận rằng NGƯỜI DÙNG đã duyệt bảng mã môn này")
     p.add_argument("-n", "--plans", type=int, default=5)
     p.add_argument("--avoid-monday-morning", action="store_true")
     p.add_argument("--avoid-morning", action="store_true")
@@ -301,11 +303,19 @@ def main():
     p.add_argument("--max-steps", type=int, default=2_000_000)
 
     p = sub.add_parser("check")
+    p.add_argument("--confirmed", action="store_true",
+                   help="BẮT BUỘC: xác nhận rằng NGƯỜI DÙNG đã duyệt bảng mã môn này")
     p.add_argument("--s", required=True, help="mã môn, cách nhau dấu phẩy")
     p.add_argument("--p", action="append", required=True, help="ID lớp của một phương án (lặp lại)")
 
     a = ap.parse_args()
     src = Source(a.base or BASES, a.data_dir)
+    if a.cmd in ("solve", "check") and not a.confirmed:
+        raise SystemExit(
+            "DỪNG: chưa được xếp. Phải gửi người dùng bảng xác nhận môn (bạn gõ -> mã, tên, tín chỉ; "
+            "liệt kê mọi ứng viên khi tên khớp nhiều mã) và chờ họ xác nhận. "
+            "Chỉ thêm --confirmed sau khi NGƯỜI DÙNG đã đồng ý các mã môn này."
+        )
 
     if a.cmd == "search":
         hits = search_subjects(src.index(), " ".join(a.query))

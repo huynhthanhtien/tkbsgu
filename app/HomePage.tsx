@@ -205,7 +205,7 @@ export default function HomePage() {
     const origin = window.location.origin;
     const prompt = `Hãy đọc và làm theo hướng dẫn tại ${AGENT_SKILL_URL} (nếu không tải được, thử ${origin}/skills/xep-tkb-sgu/SKILL.md).
 
-Tôi muốn xếp thời khóa biểu SGU. Hãy hỏi tôi về các môn học và mong muốn của tôi trước khi bắt đầu.
+Tôi muốn xếp thời khóa biểu SGU. Hãy hỏi tôi về các môn học và mong muốn của tôi trước khi bắt đầu. Với mỗi môn tôi nêu, hãy gửi tôi bảng mã môn tìm được và chờ tôi xác nhận trước khi xếp.
 
 Dùng website đích ${origin} và tạo một link chứa các phương án hợp lệ để tôi xem và lựa chọn.`;
     try {
