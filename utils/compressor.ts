@@ -21,14 +21,23 @@ export class Compressor {
   }
 
 
-  static copyCurrentUrlWithChecksum(code: string):boolean {
+  static buildShareUrl(code: string, origin?: string): string {
     const checksum = crc32(code).toString(16).padStart(8, "0");
-    const currentUrl = window.location.href;
-    const newUrl = `${currentUrl}/?code=${encodeURIComponent(code)}&checksum=${checksum}`;
+    const base = origin || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+    const url = new URL("/", base);
+    url.searchParams.set("code", code);
+    url.searchParams.set("checksum", checksum);
+    return url.toString();
+  }
 
-    navigator.clipboard.writeText(newUrl).then(() => {
-      // console.log("Đã copy:", newUrl);
-    });
+  static copyCurrentUrlWithChecksum(code: string): boolean {
+    const newUrl = Compressor.buildShareUrl(code);
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(newUrl).then(() => {
+        // console.log("Đã copy:", newUrl);
+      });
+    }
     return true;
   }
 

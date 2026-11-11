@@ -7,10 +7,12 @@ import { useIndexedDB } from "@/context/IndexedDBContext";
 import { Tkb, Subject, ScheduleItem } from "@/components/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Sparkles } from "lucide-react";
 import { Compressor, TkbsDecode } from "@/utils/compressor";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
+import AIScheduleModal from "@/components/AIScheduleModal";
+import { splitList, validateSelection } from "@/lib/aiPrompt";
 
 // import { getSubjectById } from "@/components/ui/search"
 // interface SavedSchedule {
@@ -48,6 +50,7 @@ export default function HomePage() {
   const [shareSchedules, setShareSchedules] = useState<Tkb>();
   const router = useRouter();
   const [showPopup, setShowPopup] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const [name, setName] = useState("");
   const [shareName, setShareName] = useState("");
   // import popup
@@ -58,16 +61,31 @@ export default function HomePage() {
     const code = searchParams.get("code");
     const checksum = searchParams.get("checksum");
 
-    if ((!code) && (!checksum)) return;
+    // Link không nén do chatbot tạo: /?s=a,b&i=a-01,b-02
+    const plainI = searchParams.get("i");
+
+    if ((!code) && (!checksum) && (!plainI)) return;
 
     try {
-      if ((!code) || (!checksum) || (!Compressor.verifyUrl(code, checksum))) {
-        throw ""
+      let obj: { s: string[]; i: string[] };
+      if (plainI && !code && !checksum) {
+        const ids = splitList(plainI);
+        const requested = splitList(searchParams.get("s"));
+        const res = validateSelection(requested, ids);
+        if (!res.payload) {
+          toast.error(res.problems[0] || "Lịch trong link không hợp lệ");
+          return;
+        }
+        obj = res.payload;
+      } else {
+        if ((!code) || (!checksum) || (!Compressor.verifyUrl(code, checksum))) {
+          throw ""
+        }
+        obj = Compressor.decode<{
+          s: string[],
+          i: string[],
+        }>(code);
       }
-      const obj = Compressor.decode<{
-        s: string[],
-        i: string[],
-      }>(code);
       const newData: Tkb = {
         createdAt: new Date().toISOString(),
         id: Date.now(),
@@ -196,14 +214,24 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Nút tạo mới */}
-        <button
-          onClick={handleCreateNew}
-          className="flex items-center gap-3 bg-white text-indigo-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300"
-        >
-          <PlusCircleIcon className="w-6 h-6" />
-          Tạo Thời Khóa Biểu Mới
-        </button>
+        {/* Nút thao tác */}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <button
+            onClick={handleCreateNew}
+            className="flex items-center gap-3 bg-white text-indigo-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300"
+          >
+            <PlusCircleIcon className="w-6 h-6" />
+            Tạo Thời Khóa Biểu Mới
+          </button>
+
+          <button
+            onClick={() => setShowAiModal(true)}
+            className="flex items-center gap-3 bg-gradient-to-r from-amber-400 via-rose-500 to-purple-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 border border-white/20"
+          >
+            <Sparkles className="w-6 h-6 text-yellow-200 animate-pulse" />
+            AI Xếp Thời Khóa Biểu
+          </button>
+        </div>
 
         {/* Danh sách TKB */}
         <div className="mt-10 w-full max-w-xl">
@@ -346,6 +374,11 @@ export default function HomePage() {
           </div>
         </div>
       )}
+      {/* AI Schedule Modal */}
+      <AIScheduleModal
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+      />
     </div>
   );
 }

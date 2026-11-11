@@ -1,5 +1,14 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## AI xếp thời khóa biểu (không cần API key)
+
+Nút **AI Xếp Thời Khóa Biểu** ở trang chủ chạy hoàn toàn trên trình duyệt, không cần `OPENAI_API_KEY`:
+
+1. Chọn các môn và ưu tiên (VD: tránh sáng thứ Hai, ít buổi học).
+2. Bấm **Sao chép prompt** rồi dán vào chatbot bạn dùng (ChatGPT, Claude, Gemini...). Prompt đã chứa dữ liệu lớp thật từ `public/data.json`.
+3. Dán JSON `{"s": [...], "i": [...]}` chatbot trả về vào ô kết quả, bấm **Kiểm tra & tạo link**.
+4. Ứng dụng kiểm tra mã tồn tại, mỗi môn một lớp, không trùng tiết; nếu hợp lệ mới tạo link (`?code=...&checksum=...`). Chatbot không tự tạo link được vì nén + CRC32 phải do ứng dụng thực hiện.
+
 ## Getting Started
 
 First, run the development server:
