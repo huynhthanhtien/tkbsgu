@@ -5,8 +5,8 @@ Tài liệu này hướng dẫn agent xếp lịch theo yêu cầu của ngườ
 ## Dữ liệu và website
 
 - Website đích mặc định: `https://tkbsgu.vercel.app`. Nếu người dùng cung cấp địa chỉ khác, dùng địa chỉ đó cho cả dữ liệu và link kết quả. Ví dụ khi thử local, dùng đúng cổng local được cung cấp.
-- Lấy dữ liệu môn từ `<website-đích>/data.json`. Dữ liệu này phải đến từ cùng website sẽ mở link, để mã môn và lớp khớp với bản triển khai. Nếu không truy cập được dữ liệu đó, thông báo cho người dùng; không âm thầm dùng dữ liệu khác rồi khẳng định link hợp lệ.
-- Có thể tham khảo `<website-đích>/tkb.json` để tìm thông tin học kỳ, nhưng không mặc định file đó luôn phản ánh chính xác `data.json`; nếu không xác định được, nói rõ. Dữ liệu không xác nhận số chỗ đăng ký còn trống.
+- Lấy dữ liệu môn từ GitHub: <https://raw.githubusercontent.com/huynhthanhtien/tkbsgu/main/public/data.json>. Nếu không truy cập được dữ liệu, thông báo cho người dùng và không tự bịa kết quả.
+- Có thể tham khảo <https://raw.githubusercontent.com/huynhthanhtien/tkbsgu/main/public/tkb.json> để tìm thông tin học kỳ, nhưng không mặc định file đó luôn phản ánh chính xác `data.json`; nếu không xác định được, nói rõ. Dữ liệu không xác nhận số chỗ đăng ký còn trống.
 - Cần khả năng đọc dữ liệu và tính toán, ưu tiên chạy code để kiểm tra. Nếu không thể thực hiện hoặc kiểm tra kết quả, nói rõ giới hạn; không tự bịa mã môn, lớp hoặc link.
 
 `data.json` là mảng môn học: `ma_mon`, `ten_mon`, `so_tc`, `lop`. Mỗi lớp có `nhom_to` và `tkb`; mỗi buổi có `thu`, `tbd`, `tkt`, `phong`, `giang_vien` và có thể có `ngay`. ID lớp có dạng `ma_mon-nhom_to`, ví dụ `841404-01`.

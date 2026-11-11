@@ -9,7 +9,7 @@ Trong trang thời khóa biểu, nút **Prompt AI** tạo prompt để sử dụ
 3. Dán câu trả lời của chatbot vào ô kết quả và bấm **Kiểm tra và xem thử trên thời khóa biểu**.
 4. Ứng dụng kiểm tra mã lớp, số môn và xung đột trước khi cho xem thử và áp dụng từng phương án.
 
-Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Agent đọc `/agent-guide.md` và dữ liệu `/data.json` từ cùng website, rồi tạo link nhiều phương án. Agent cần quyền truy cập dữ liệu và khả năng tính toán; môi trường chạy từ xa có thể không truy cập được localhost của người dùng.
+Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Agent đọc `/agent-guide.md` và dữ liệu `public/data.json` từ GitHub, rồi tạo link nhiều phương án. Agent cần quyền truy cập dữ liệu và khả năng tính toán; môi trường chạy từ xa có thể không truy cập được localhost của người dùng.
 
 ## Chia sẻ nhiều phương án qua URL
 
