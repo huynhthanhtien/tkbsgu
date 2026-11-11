@@ -7,11 +7,11 @@ import { useIndexedDB } from "@/context/IndexedDBContext";
 import { Tkb, Subject, ScheduleItem } from "@/components/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { Copy, MoreVertical } from "lucide-react";
 import { Compressor, TkbsDecode } from "@/utils/compressor";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
-import { splitList, validateSelection } from "@/lib/aiPrompt";
+import { splitList, validateSelection, type PlanResult } from "@/lib/aiPrompt";
 
 // import { getSubjectById } from "@/components/ui/search"
 // interface SavedSchedule {
@@ -47,6 +47,7 @@ export default function HomePage() {
   const { getTkbList, addTkb, ready, removeTkb } = useIndexedDB();
   const [savedSchedules, setSavedSchedules] = useState<Tkb[]>([]);
   const [shareSchedules, setShareSchedules] = useState<Tkb>();
+  const [sharedPlans, setSharedPlans] = useState<PlanResult[] | null>(null);
   const router = useRouter();
   const [showPopup, setShowPopup] = useState(false);
   const [name, setName] = useState("");
@@ -61,12 +62,27 @@ export default function HomePage() {
 
     // Link không nén do chatbot tạo: /?s=a,b&i=a-01,b-02
     const plainI = searchParams.get("i");
+    const planParams = searchParams.getAll("p");
 
-    if ((!code) && (!checksum) && (!plainI)) return;
+    if ((!code) && (!checksum) && (!plainI) && planParams.length === 0) return;
 
     try {
       let obj: { s: string[]; i: string[] };
-      if (plainI && !code && !checksum) {
+      if (planParams.length > 0 && !code && !checksum && !plainI) {
+        const requested = splitList(searchParams.get("s"));
+        if (!requested.length || new Set(requested).size !== requested.length || planParams.length > 20) {
+          throw new Error("Danh sách môn hoặc số phương án không hợp lệ");
+        }
+        const plans = planParams.map((p, index) => ({
+          name: `Phương án ${index + 1}`,
+          ...validateSelection(requested, splitList(p)),
+        }));
+        if (plans.some((plan) => !plan.payload)) {
+          throw new Error("Có phương án không hợp lệ hoặc chưa đủ môn");
+        }
+        obj = plans[0].payload!;
+        setSharedPlans(plans);
+      } else if (plainI && !code && !checksum && planParams.length === 0) {
         const ids = splitList(plainI);
         const requested = splitList(searchParams.get("s"));
         const res = validateSelection(requested, ids);
@@ -75,7 +91,8 @@ export default function HomePage() {
           return;
         }
         obj = res.payload;
-      } else {
+        setSharedPlans(null);
+      } else if (!planParams.length) {
         if ((!code) || (!checksum) || (!Compressor.verifyUrl(code, checksum))) {
           throw ""
         }
@@ -83,17 +100,22 @@ export default function HomePage() {
           s: string[],
           i: string[],
         }>(code);
+        setSharedPlans(null);
+      } else {
+        throw new Error("Không thể kết hợp nhiều định dạng link");
       }
       const newData: Tkb = {
         createdAt: new Date().toISOString(),
         id: Date.now(),
         name: "",
-        data: TkbsDecode(obj.s, obj.i)
+        data: planParams.length
+          ? { ...TkbsDecode(obj.s, []), ScheduleItem: {} }
+          : TkbsDecode(obj.s, obj.i)
       }
       setShareSchedules(newData);
       setOpen(true);
-    } catch {
-      toast.error("URL không hợp lệ");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "URL không hợp lệ");
     } finally {
       router.replace("/");
     }
@@ -101,6 +123,10 @@ export default function HomePage() {
   }, [searchParams]);
 
   const handleSubmitShare = async () => {
+    if (!ready) {
+      toast.error("Đang mở dữ liệu, vui lòng thử lại.");
+      return;
+    }
     if (shareName.trim() && shareSchedules) {
       const newTkb: Tkb = {
         id: shareSchedules.id,
@@ -108,9 +134,31 @@ export default function HomePage() {
         createdAt: shareSchedules.createdAt,
         data: shareSchedules.data,
       }
-      await addTkb(newTkb);
+      if (sharedPlans) {
+        try {
+          localStorage.setItem(`tkb-ai-plans:${newTkb.id}`, JSON.stringify({
+            key: newTkb.data.Sub.map((subject) => subject.id).join(","),
+            plans: sharedPlans,
+          }));
+        } catch {
+          toast.error("Không thể lưu các phương án vào trình duyệt.");
+          return;
+        }
+      }
+      try {
+        await addTkb(newTkb);
+      } catch {
+        if (sharedPlans) localStorage.removeItem(`tkb-ai-plans:${newTkb.id}`);
+        toast.error("Không thể lưu thời khóa biểu.");
+        return;
+      }
       toast.success("Đã nhập thời khoá biểu xong!");
       setOpen(false);
+      if (sharedPlans) {
+        setSharedPlans(null);
+        router.push(`/tkb/${newTkb.id}`);
+        return;
+      }
     }
     setShareName("");
     router.replace("/");
@@ -148,6 +196,21 @@ export default function HomePage() {
 
   const handleCreateNew = () => {
     setShowPopup(true);
+  };
+
+  const handleCopyAgentPrompt = async () => {
+    const origin = window.location.origin;
+    const prompt = `Hãy đọc và làm theo hướng dẫn tại ${origin}/agent-guide.md.
+
+Tôi muốn xếp thời khóa biểu SGU. Hãy hỏi tôi về các môn học và mong muốn của tôi trước khi bắt đầu.
+
+Dùng website đích ${origin} và tạo một link chứa các phương án hợp lệ để tôi xem và lựa chọn.`;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success("Đã sao chép hướng dẫn cho AI agent!");
+    } catch {
+      toast.error("Không thể sao chép. Hãy kiểm tra quyền clipboard của trình duyệt.");
+    }
   };
 
   const handleOpenSchedule = (tkb: Tkb) => {
@@ -220,6 +283,15 @@ export default function HomePage() {
           >
             <PlusCircleIcon className="w-6 h-6" />
             Tạo Thời Khóa Biểu Mới
+          </button>
+          <button
+            type="button"
+            onClick={handleCopyAgentPrompt}
+            className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition"
+            title="Sao chép prompt để xếp thời khóa biểu bằng AI agent"
+          >
+            <Copy className="w-4 h-4" />
+            Copy prompt cho agent
           </button>
         </div>
 

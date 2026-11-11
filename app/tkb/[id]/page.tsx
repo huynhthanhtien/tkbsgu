@@ -148,6 +148,23 @@ export default function SchedulePlanner() {
     toast.success(`Đã áp dụng ${currentPlan.name} vào thời khóa biểu.`);
     setActivePlan(null);
   };
+  const sharePlans = async () => {
+    if (!plans) return;
+    const validPlans = plans.filter((plan) => plan.payload);
+    if (!validPlans.length) {
+      toast.error("Không có phương án hợp lệ để chia sẻ.");
+      return;
+    }
+    const url = new URL("/", window.location.origin);
+    url.searchParams.set("s", selectedSubjects.map((subject) => subject.id).join(","));
+    validPlans.forEach((plan) => url.searchParams.append("p", plan.payload!.i.join(",")));
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      toast.success(`Đã sao chép link ${validPlans.length} phương án hợp lệ.`);
+    } catch {
+      toast.error("Không thể sao chép link. Hãy kiểm tra quyền clipboard.");
+    }
+  };
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean, subject: any | null }>({ open: false, subject: null });
   // const [schedule, setSchedule] = useState<{ [key: string]: ScheduleItem }>({});
@@ -786,6 +803,13 @@ export default function SchedulePlanner() {
                         </button>
                       ))}
                       <div className="ml-auto flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={sharePlans}
+                          className="px-3 py-1 rounded-lg text-sm border border-indigo-300 dark:border-indigo-700 hover:bg-white/60 dark:hover:bg-gray-800"
+                        >
+                          Chia sẻ phương án
+                        </button>
                         <button
                           type="button"
                           disabled={!preview}

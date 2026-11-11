@@ -2,12 +2,26 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## AI xếp thời khóa biểu (không cần API key)
 
-Nút **AI Xếp Thời Khóa Biểu** ở trang chủ chạy hoàn toàn trên trình duyệt, không cần `OPENAI_API_KEY`:
+Trong trang thời khóa biểu, nút **Prompt AI** tạo prompt để sử dụng với chatbot, không cần `OPENAI_API_KEY`:
 
 1. Chọn các môn và ưu tiên (VD: tránh sáng thứ Hai, ít buổi học).
 2. Bấm **Sao chép prompt** rồi dán vào chatbot bạn dùng (ChatGPT, Claude, Gemini...). Prompt đã chứa dữ liệu lớp thật từ `public/data.json`.
-3. Dán JSON `{"s": [...], "i": [...]}` chatbot trả về vào ô kết quả, bấm **Kiểm tra & tạo link**.
-4. Ứng dụng kiểm tra mã tồn tại, mỗi môn một lớp, không trùng tiết; nếu hợp lệ mới tạo link (`?code=...&checksum=...`). Chatbot không tự tạo link được vì nén + CRC32 phải do ứng dụng thực hiện.
+3. Dán câu trả lời của chatbot vào ô kết quả và bấm **Kiểm tra và xem thử trên thời khóa biểu**.
+4. Ứng dụng kiểm tra mã lớp, số môn và xung đột trước khi cho xem thử và áp dụng từng phương án.
+
+Để dùng một agent bên ngoài, bấm **Copy prompt cho agent** trên trang chủ và dán vào cuộc trò chuyện. Agent đọc `/agent-guide.md` và dữ liệu `/data.json` từ cùng website, rồi tạo link nhiều phương án. Agent cần quyền truy cập dữ liệu và khả năng tính toán; môi trường chạy từ xa có thể không truy cập được localhost của người dùng.
+
+## Chia sẻ nhiều phương án qua URL
+
+Sau khi có phương án hợp lệ trong trang thời khóa biểu, bấm **Chia sẻ phương án** để sao chép một link. Người nhận mở link, đặt tên và lưu; các phương án được kiểm tra lại và xuất hiện trong thanh phương án để xem thử và áp dụng. Lịch chính ban đầu để trống. Tên và ghi chú AI không được đưa vào link; các phương án được đặt tên theo thứ tự. Phương án không hợp lệ không được chia sẻ.
+
+Agent cũng có thể tạo link trực tiếp bằng mã môn và mã lớp, tối đa 20 phương án:
+
+```text
+https://tkbsgu.vercel.app/?s=841404,841407&p=841404-01,841407-01&p=841404-02,841407-01
+```
+
+`s` là danh sách mã môn, mỗi tham số `p` là một phương án gồm đúng một mã lớp cho mỗi môn. Mọi phương án phải hợp lệ và không trùng tiết; chỉ cần một phương án không hợp lệ thì link bị từ chối. Các định dạng link chia sẻ cũ vẫn được hỗ trợ.
 
 ## Getting Started
 
