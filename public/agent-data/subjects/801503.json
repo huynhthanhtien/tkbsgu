@@ -1,1 +1,39 @@
-{"ma_mon":"801503","ten_mon":"Giải tích hàm biến thực II","so_tc":"5","lop":[{"nhom_to":"01","tkb":[{"thu":"Thứ 2","thoi_gian":"từ 13:00 đến 15:00","phong":"Ph 1.B101","giang_vien":"GV Phan Trung Hiếu","ngay":"04/01/27 đến 15/03/27","tbd":6,"tkt":8},{"thu":"Thứ 3","thoi_gian":"từ 13:00 đến 15:00","phong":"Ph 1.B101","giang_vien":"GV Phan Trung Hiếu","ngay":"05/01/27 đến 16/03/27","tbd":6,"tkt":8},{"thu":"Thứ 4","thoi_gian":"từ 13:00 đến 15:00","phong":"Ph 1.B101","giang_vien":"GV Phan Trung Hiếu","ngay":"06/01/27 đến 17/03/27","tbd":6,"tkt":8}]}]}
+{
+    "ma_mon": "801503",
+    "ten_mon": "Giải tích hàm biến thực II",
+    "so_tc": "5",
+    "lop": [
+        {
+            "nhom_to": "01",
+            "tkb": [
+                {
+                    "thu": "Thứ 2",
+                    "thoi_gian": "từ 13:00 đến 15:00",
+                    "phong": "Ph 1.B101",
+                    "giang_vien": "GV Phan Trung Hiếu",
+                    "ngay": "04/01/27 đến 15/03/27",
+                    "tbd": 6,
+                    "tkt": 8
+                },
+                {
+                    "thu": "Thứ 3",
+                    "thoi_gian": "từ 13:00 đến 15:00",
+                    "phong": "Ph 1.B101",
+                    "giang_vien": "GV Phan Trung Hiếu",
+                    "ngay": "05/01/27 đến 16/03/27",
+                    "tbd": 6,
+                    "tkt": 8
+                },
+                {
+                    "thu": "Thứ 4",
+                    "thoi_gian": "từ 13:00 đến 15:00",
+                    "phong": "Ph 1.B101",
+                    "giang_vien": "GV Phan Trung Hiếu",
+                    "ngay": "06/01/27 đến 17/03/27",
+                    "tbd": 6,
+                    "tkt": 8
+                }
+            ]
+        }
+    ]
+}

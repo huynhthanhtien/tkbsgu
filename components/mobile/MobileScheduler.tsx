@@ -23,6 +23,8 @@ import {
 import type { ClassInfo, ScheduleItem, Subject } from "@/components/types";
 import type { PlanResult } from "@/lib/aiPrompt";
 import SubjectSelector from "@/components/ui/search";
+import ClassCapacity from "@/components/ClassCapacity";
+import { findScheduleConflict } from "@/lib/scheduleConflict";
 import BottomSheet from "@/components/mobile/BottomSheet";
 
 /* ---------- Hằng số & kiểu ---------- */
@@ -118,6 +120,14 @@ export default function MobileScheduler(props: MobileSchedulerProps) {
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [sessionSheet, setSessionSheet] = useState<MobileBlock | null>(null);
   const [deleteSheet, setDeleteSheet] = useState<Subject | null>(null);
+  const previousSubjectIds = useRef<string[]>([]);
+
+  useEffect(() => {
+    const previous = previousSubjectIds.current;
+    const added = subjects.find((subject) => !previous.includes(subject.id));
+    if (tab === "mon" && added) setOpenSubject(added.id);
+    previousSubjectIds.current = subjects.map((subject) => subject.id);
+  }, [subjects, tab]);
 
   // Mở đúng ngày hôm nay sau khi hydrate (tránh lệch SSR/CSR).
   useEffect(() => {
@@ -186,6 +196,7 @@ export default function MobileScheduler(props: MobileSchedulerProps) {
             setOpenSubject={setOpenSubject}
             onSelectClass={props.onSelectClass}
             onAskDelete={setDeleteSheet}
+            onGoSchedule={() => setTab("lich")}
           />
         )}
         {tab === "cong-cu" && <ToolsTab {...props} />}
@@ -646,7 +657,7 @@ function EmptyState({ title, text, action, onAction }: { title: string; text: st
 }
 
 function SubjectsTab({
-  subjects, schedule, scheduledSubjectIds, openSubject, setOpenSubject, onSelectClass, onAskDelete,
+  subjects, schedule, scheduledSubjectIds, openSubject, setOpenSubject, onSelectClass, onAskDelete, onGoSchedule,
 }: {
   subjects: Subject[];
   schedule: { [key: string]: ScheduleItem };
@@ -655,27 +666,44 @@ function SubjectsTab({
   setOpenSubject: (id: string | null) => void;
   onSelectClass: (subject: Subject, cls: ClassInfo) => void;
   onAskDelete: (s: Subject) => void;
+  onGoSchedule: () => void;
 }) {
   const chosenClass = (subjectId: string) =>
     Object.values(schedule).find((i) => i.subjectId === subjectId)?.classId;
 
   /** Tên môn khác đang chiếm tiết của lớp này (nếu trùng). */
   const conflictOf = (subject: Subject, cls: ClassInfo): string | null => {
-    for (const sch of cls.schedules) {
-      for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
-        const item = schedule[`${sch.day}-${p}`];
-        if (item && item.subjectId !== subject.id) return item.subjectName;
-      }
-    }
-    return null;
+    const conflict = findScheduleConflict(cls, subject.id, schedule);
+    return conflict ? `${conflict.subjectName} · ${conflict.day}, tiết ${conflict.period}` : null;
   };
 
   return (
-    <div className="space-y-3">
-      <SubjectSelector />
+    <div className="space-y-4">
+      <section className="rounded-2xl bg-blue-600 p-4 text-white shadow-sm dark:bg-blue-800">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-blue-100">XẾP THỜI KHÓA BIỂU</p>
+            <h2 className="mt-1 text-lg font-bold">Chọn lớp cho từng môn</h2>
+            <p className="mt-1 text-sm text-blue-100">Thêm môn, xem lịch và chạm vào nhóm phù hợp.</p>
+          </div>
+          <span className="shrink-0 rounded-xl bg-white/15 px-3 py-2 text-center text-xs"><strong className="block text-lg">{scheduledSubjectIds.size}/{subjects.length}</strong>đã xếp</span>
+        </div>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/25" role="progressbar" aria-label="Tiến độ xếp môn" aria-valuemin={0} aria-valuemax={subjects.length || 1} aria-valuenow={scheduledSubjectIds.size}>
+          <div className="h-full rounded-full bg-white transition-all" style={{ width: `${subjects.length ? (scheduledSubjectIds.size / subjects.length) * 100 : 0}%` }} />
+        </div>
+      </section>
+      <section aria-label="Thêm môn học">
+        <div className="mb-2 text-sm font-semibold">Thêm môn học</div>
+        <SubjectSelector />
+      </section>
       {subjects.length === 0 ? (
         <EmptyState title="Chưa có môn nào" text="Gõ tên hoặc mã môn ở ô tìm kiếm để thêm." />
       ) : (
+        <>
+        <div className="flex items-center justify-between gap-2">
+          <div><h2 className="font-bold">Danh sách môn</h2><p className="text-xs text-gray-500 dark:text-gray-400">{subjects.length - scheduledSubjectIds.size} môn chưa chọn lớp</p></div>
+          <button type="button" onClick={onGoSchedule} className="min-h-11 rounded-xl bg-white px-3 text-sm font-semibold text-blue-700 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:text-blue-300 dark:ring-gray-700">Xem lịch →</button>
+        </div>
         <ul className="space-y-2">
           {[...subjects].reverse().map((subject) => {
             const open = openSubject === subject.id;
@@ -710,7 +738,8 @@ function SubjectsTab({
 
                 {open && (
                   <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 p-3">
-                    {subject.classes.map((cls) => {
+                    <p className="px-1 pb-1 text-xs text-gray-500 dark:text-gray-400">Chạm vào một nhóm để xếp hoặc đổi lớp. Lớp trùng lịch được đánh dấu bên dưới.</p>
+                    {[...subject.classes].sort((a, b) => Number(!!conflictOf(subject, a)) - Number(!!conflictOf(subject, b))).map((cls) => {
                       const selected = chosen === cls.id;
                       const conflict = selected ? null : conflictOf(subject, cls);
                       const teachers = Array.from(new Set(cls.schedules.map((s) => s.teacher).filter(Boolean)))
@@ -725,17 +754,18 @@ function SubjectsTab({
                           aria-pressed={selected}
                           className={`flex min-h-16 w-full touch-manipulation items-center gap-3 rounded-xl border-l-4 p-3 text-left ${c.bar} ${c.soft} ${
                             conflict ? "opacity-60" : ""
-                          } ${selected ? "ring-2 ring-blue-500" : ""}`}
+                          } ${selected ? "ring-2 ring-blue-500" : "ring-1 ring-inset ring-gray-200 dark:ring-gray-700"}`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold">Nhóm {cls.id.split("-")[1]}</div>
-                            <div className="mt-0.5 text-xs text-gray-700 dark:text-gray-300">
-                              {cls.schedules.map((s) => `${shortDay(s.day)} t${s.startPeriod}-${s.endPeriod}`).join(" · ") || "Chưa có lịch"}
+                            <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-bold">Nhóm {cls.id.split("-")[1]}</span><span className={`text-xs font-semibold ${selected ? "text-blue-700 dark:text-blue-300" : "text-gray-600 dark:text-gray-300"}`}>{selected ? "Đã chọn" : "Chọn nhóm +"}</span></div>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {cls.schedules.length ? cls.schedules.map((s, i) => <span key={i} className="rounded-md bg-white/70 px-2 py-1 text-xs font-semibold dark:bg-gray-950/40">{shortDay(s.day)} · Tiết {s.startPeriod}–{s.endPeriod}</span>) : <span className="text-xs text-gray-500">Chưa có lịch</span>}
                             </div>
                             <div className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
                               {teachers || "Chưa có GV"}
                               {cls.schedules[0]?.room ? ` · ${cls.schedules[0].room}` : ""}
                             </div>
+                            <ClassCapacity id={cls.id} />
                             {conflict && <div className="mt-1 text-[11px] font-semibold text-red-600 dark:text-red-400">Trùng với {conflict}</div>}
                           </div>
                           {selected && <Check className="size-6 shrink-0 text-blue-600" />}
@@ -755,6 +785,7 @@ function SubjectsTab({
             );
           })}
         </ul>
+        </>
       )}
     </div>
   );

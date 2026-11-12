@@ -16,11 +16,13 @@ import { useSubjects } from "@/context/SubjectsContext"
 import { useTkb } from "@/context/TkbContext";
 
 import SubjectSelector from "@/components/ui/search";
+import ClassCapacity from "@/components/ClassCapacity";
 import AddCalendar from "@/components/AddCalendar"
 import AIPromptButton from "@/components/AIPromptButton"
 import MobileScheduler, { type MobileBlock } from "@/components/mobile/MobileScheduler"
 import { TkbsDecode } from "@/utils/compressor"
 import type { PlanResult } from "@/lib/aiPrompt"
+import { findScheduleConflict } from "@/lib/scheduleConflict"
 
 const arr_start_time = [
   "00:00", "07:00", "07:50", "09:00", "09:50", "10:40",
@@ -183,20 +185,9 @@ export default function SchedulePlanner() {
     if (isAlreadySelected) return;
 
     // Kiểm tra trùng slot với các môn khác
-    let conflict = null;
-    for (const sch of cls.schedules) {
-      for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
-        const scheduleKey = `${sch.day}-${p}`;
-        const slotItem = schedule[scheduleKey];
-        if (slotItem && slotItem.subjectCode !== subject.id) {
-          conflict = { day: sch.day, p, subjectName: slotItem.subjectName };
-          break;
-        }
-      }
-      if (conflict) break;
-    }
+    const conflict = findScheduleConflict(cls, subject.id, schedule);
     if (conflict) {
-      toast.warning(`Không thể chọn lớp vì trùng với môn khác (${conflict.subjectName}, tiết ${conflict.p})!`);
+      toast.warning(`Trùng với ${conflict.subjectName} vào ${conflict.day}, tiết ${conflict.period}.`);
       return;
     }
 
@@ -303,46 +294,6 @@ export default function SchedulePlanner() {
 
 
 
-    // Xác định tất cả lớp phù hợp với slot đang thả
-    const conflictCheckClasses = subject.classes.filter((cls) =>
-      cls.schedules.some(
-        (schedule) => schedule.day === day && period >= schedule.startPeriod && period <= schedule.endPeriod,
-      ),
-    );
-
-    // Nếu có lớp phù hợp, kiểm tra trùng slot cho từng lớp phù hợp
-    if (conflictCheckClasses.length === 1){
-
-      let conflict = null;
-      for (const cls of conflictCheckClasses) {
-        for (const sch of cls.schedules) {
-          if (sch.day === day && period >= sch.startPeriod && period <= sch.endPeriod) {
-            for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
-              const key = `${day}-${p}`;
-              const slotItem = schedule[key];
-              if (slotItem && slotItem.subjectCode !== draggedSubject) {
-                conflict = { day, p, subjectName: slotItem.subjectName };
-                break;
-              }
-            }
-          }
-          if (conflict) break;
-        }
-        if (conflict) break;
-      }
-      if (conflict) {
-        console.log('CONFLICT_DROP', conflict);
-        setTimeout(() => {
-          toast.warning(`Không thể kéo vào ô đã có môn khác (${conflict.subjectName}, tiết ${conflict.p})!`);
-        }, 0);
-        setDraggedSubject(null);
-        setDraggedFromSchedule(null);
-        setAvailableClasses([]);
-        setHoveredSlot(null);
-        return;
-      }
-    }
-
       // Tìm tất cả lớp có chứa ô này trong lịch học
       const matchingClasses = subject.classes.filter((cls) =>
       cls.schedules.some(
@@ -377,101 +328,14 @@ export default function SchedulePlanner() {
       return
     }
 
-    // Xóa lớp cũ của môn học này nếu có
-    const newSchedule = { ...schedule }
-    Object.keys(newSchedule).forEach((key) => {
-      if (newSchedule[key].subjectId === draggedSubject) {
-        delete newSchedule[key]
-      }
-    })
-
-    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
-    matchingClass.schedules.forEach((classSchedule) => {
-      for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
-        const scheduleKey = `${classSchedule.day}-${p}`
-        newSchedule[scheduleKey] = {
-          subjectId: draggedSubject,
-          classId: matchingClass.id,
-          subjectName: subject.name,
-          subjectCode: subject.code,
-          color: matchingClass.color,
-          schedules: matchingClass.schedules,
-          credit: subject.credit ?? 0,
-        }
-      }
-    })
-
-    setSchedule(newSchedule)
-    setDraggedSubject(null)
-    setDraggedFromSchedule(null)
-    setAvailableClasses([])
-    setHoveredSlot(null)
+    handleSidebarClassClick(subject, matchingClass)
   }
 
-  // Hàm xử lý khi chọn lớp từ modal
+  // Mọi cách chọn lớp đều dùng chung kiểm tra toàn bộ lịch học.
   const handleSelectClassFromModal = (cls: ClassInfo) => {
-    if (!classSelectionModal.subject) return
-    const subject = classSelectionModal.subject
-    const day = classSelectionModal.day
-    const period = classSelectionModal.period
-
-    // Nếu đang drag từ schedule và chọn cùng lớp, không làm gì
-    if (draggedFromSchedule && cls.id === draggedFromSchedule.classId) {
-      setDraggedSubject(null)
-      setDraggedFromSchedule(null)
-      setAvailableClasses([])
-      setHoveredSlot(null)
-      setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null })
-      return
+    if (classSelectionModal.subject) {
+      handleSidebarClassClick(classSelectionModal.subject, cls)
     }
-
-    let conflict = null;
-    for (const sch of cls.schedules) {
-      for (let p = sch.startPeriod; p <= sch.endPeriod; p++) {
-        const scheduleKey = `${sch.day}-${p}`;
-        const slotItem = schedule[scheduleKey];
-        if (slotItem && slotItem.subjectCode !== subject.id) {
-          conflict = { day: sch.day, p, subjectName: slotItem.subjectName };
-          break;
-        }
-      }
-      if (conflict) break;
-    }
-    if (conflict) {
-      toast.warning(`Không thể chọn lớp vì trùng với môn khác (${conflict.subjectName}, tiết ${conflict.p})!`);
-      return;
-    }
-
-    // Xóa lớp cũ của môn học này nếu có
-    const newSchedule = { ...schedule }
-    Object.keys(newSchedule).forEach((key) => {
-      if (newSchedule[key].subjectId === subject.id) {
-        delete newSchedule[key]
-      }
-    })
-
-    // Thêm tất cả các ô của lớp mới vào lịch, lưu cả credit
-    cls.schedules.forEach((classSchedule) => {
-      for (let p = classSchedule.startPeriod; p <= classSchedule.endPeriod; p++) {
-        const scheduleKey = `${classSchedule.day}-${p}`
-        newSchedule[scheduleKey] = {
-          subjectId: subject.id,
-          classId: cls.id,
-          subjectName: subject.name,
-          subjectCode: subject.code,
-          color: cls.color,
-          schedules: cls.schedules,
-          credit: subject.credit ?? 0,
-        }
-      }
-    })
-
-    setSchedule(newSchedule)
-    setDraggedSubject(null)
-    setDraggedFromSchedule(null)
-    setAvailableClasses([])
-    setHoveredSlot(null)
-    setClassSelectionModal({ open: false, classes: [], day: '', period: 0, subject: null })
   }
 
   const removeFromSchedule = (classId: string) => {
@@ -723,6 +587,7 @@ export default function SchedulePlanner() {
                                   <div className="font-medium mb-1">
                                     Nhóm tổ {cls.id.split("-")[1]} - {cls.id}
                                   </div>
+                                  <ClassCapacity id={cls.id} />
                                   <div className="flex items-center gap-1.5 text-xs opacity-90 mb-1">
                                     <User className="w-3 h-3 shrink-0" />
                                     <span className="truncate" title={teachers || "Chưa có giảng viên"}>
