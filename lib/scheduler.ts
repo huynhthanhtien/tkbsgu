@@ -89,7 +89,7 @@ export function classesOverlap(
 
 // Lấy danh sách tất cả các môn từ data.json
 export function getAllSubjects(): RawSubject[] {
-  return rawData as unknown as RawSubject[];
+  return rawData.mon_hoc as unknown as RawSubject[];
 }
 
 // Tìm môn theo mã hoặc tên

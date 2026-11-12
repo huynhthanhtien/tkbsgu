@@ -757,7 +757,7 @@ function SubjectsTab({
                           } ${selected ? "ring-2 ring-blue-500" : "ring-1 ring-inset ring-gray-200 dark:ring-gray-700"}`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-bold">Nhóm {cls.id.split("-")[1]}</span><span className={`text-xs font-semibold ${selected ? "text-blue-700 dark:text-blue-300" : "text-gray-600 dark:text-gray-300"}`}>{selected ? "Đã chọn" : "Chọn nhóm +"}</span></div>
+                            <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-bold">Nhóm {cls.id.split("-").slice(1).join(" · Tổ ")}</span><span className={`text-xs font-semibold ${selected ? "text-blue-700 dark:text-blue-300" : "text-gray-600 dark:text-gray-300"}`}>{selected ? "Đã chọn" : "Chọn nhóm +"}</span></div>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               {cls.schedules.length ? cls.schedules.map((s, i) => <span key={i} className="rounded-md bg-white/70 px-2 py-1 text-xs font-semibold dark:bg-gray-950/40">{shortDay(s.day)} · Tiết {s.startPeriod}–{s.endPeriod}</span>) : <span className="text-xs text-gray-500">Chưa có lịch</span>}
                             </div>

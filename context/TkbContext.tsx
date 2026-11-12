@@ -4,6 +4,9 @@ import { createContext, useContext, useState, ReactNode, useEffect } from "react
 import { useIndexedDB } from "@/context/IndexedDBContext"
 import { Tkb } from "@/components/types";
 import merge from "lodash.merge";
+import { getSubjectById } from "@/components/ui/search";
+import { refreshSavedSchedule } from "@/lib/refreshSavedSchedule";
+import { toast } from "sonner";
 
 type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
@@ -30,7 +33,11 @@ export const TkbProvider = ({ id, children }: { id: number; children: ReactNode 
             const data = await getTkbById(id);
             // console.log("data", data);
             if (data){
-                setSelectedTkb(data);
+                const refreshed = refreshSavedSchedule(data, getSubjectById);
+                setSelectedTkb(refreshed.tkb);
+                if (refreshed.removedSubjects || refreshed.removedClasses) {
+                    toast.warning(`Không thể tự cập nhật ${refreshed.removedSubjects} môn và ${refreshed.removedClasses} lớp. Lịch cũ được giữ nguyên; hãy kiểm tra và chọn lại lớp.`);
+                }
             }
         }
         if (!ready) return;

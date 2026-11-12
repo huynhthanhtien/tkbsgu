@@ -1,8 +1,10 @@
-import data from "@/public/seat-data.json";
+import data from "@/public/data.json";
 
 type Capacity = { sl_dk?: number | null; sl_cp?: number | null; sl_cl?: number | null; to?: string | null; ds_lop?: string[] | null };
 type Entry = Capacity & { thong_tin_so_luong?: Capacity[] };
-const classes: Record<string, Entry> = data.lop;
+const classes: Record<string, Entry> = Object.fromEntries(
+  data.mon_hoc.flatMap((subject) => subject.lop.map((cls) => [`${subject.ma_mon}-${cls.nhom_to}`, cls as Entry]))
+);
 
 export default function ClassCapacity({ id }: { id: string }) {
   const entry = classes[id];

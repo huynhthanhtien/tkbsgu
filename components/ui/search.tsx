@@ -23,7 +23,7 @@ function SubjectSelector() {
 
   const filteredList =
     searchText.length >= 2
-      ? rawData
+      ? rawData.mon_hoc
         .filter((item: any) =>
           // search theo tên môn hoặc mã môn
           item.ten_mon.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -71,7 +71,7 @@ export default SubjectSelector;
 
 
 export function getSubjectById(id: string): Subject {
-  const result = rawData.find((item: any) => item.ma_mon === id);
+  const result = rawData.mon_hoc.find((item: any) => item.ma_mon === id);
   if (!result) {
     throw new Error(`Subject with id ${id} not found`);
   }

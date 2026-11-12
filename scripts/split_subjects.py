@@ -23,6 +23,8 @@ def main():
 
     with source.open(encoding="utf-8") as file:
         subjects = json.load(file)
+    if isinstance(subjects, dict):
+        subjects = subjects.get("mon_hoc")
     if not isinstance(subjects, list):
         parser.error("The input must be an array of subjects.")
 
@@ -46,11 +48,14 @@ def main():
     for subject in subjects:
         path = subject_dir / f"{subject['ma_mon']}.json"
         path.write_text(json.dumps(subject, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    for path in subject_dir.glob("*.json"):
+        if path.stem not in seen:
+            path.unlink()
     (output / "index.json").write_text(
         json.dumps(index, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8"
     )
     print(f"Đã tạo danh mục và {len(index)} file môn học trong {output}")
-    print("File dữ liệu gốc không thay đổi. Chỉ dùng mã có trong index.json.")
+    print("Đã xóa các file môn cũ không còn trong danh mục; file dữ liệu gốc không thay đổi.")
 
 
 if __name__ == "__main__":

@@ -19,13 +19,14 @@ Dữ liệu và skill được lấy từ GitHub raw trước (`raw.githubuserco
 
 ## Cập nhật dữ liệu cho agent
 
-Sau khi cập nhật `public/data.json`, chạy:
+Sau khi lưu phản hồi API vào `test/w-locdsnhomto.json`, tạo lại dữ liệu web và dữ liệu agent:
 
 ```bash
+python3 scripts/import_registration_data.py
 python3 scripts/split_subjects.py
 ```
 
-Script tạo danh mục gọn và các file môn trong `public/agent-data/`, không sửa file gốc. Đưa các file được tạo lên GitHub cùng `data.json` để Vercel phục vụ chúng. Script không xóa file môn cũ; chỉ các mã có trong `index.json` thuộc danh mục hiện tại. Có thể chỉ định đường dẫn khác bằng `--input` và `--output`.
+`public/data.json` chứa học kỳ và danh sách môn trong trường `mon_hoc`. Script chia môn tạo danh mục gọn, cập nhật các file môn trong `public/agent-data/` và xóa các file môn không còn trong danh mục. Đưa các file được tạo lên GitHub cùng `data.json` để Vercel phục vụ chúng. Có thể chỉ định đường dẫn khác bằng `--input` và `--output`.
 
 ## Chia sẻ nhiều phương án qua URL
 
@@ -38,6 +39,8 @@ https://tkbsgu.vercel.app/?s=841404,841407&p=841404-01,841407-01&p=841404-02,841
 ```
 
 `s` là danh sách mã môn, mỗi tham số `p` là một phương án gồm đúng một mã lớp cho mỗi môn. Mọi phương án phải hợp lệ và không trùng tiết; chỉ cần một phương án không hợp lệ thì link bị từ chối. Các định dạng link chia sẻ cũ vẫn được hỗ trợ.
+
+Với nhóm có nhiều tổ, mã lớp gồm cả mã tổ, ví dụ `806414-01-02` là môn 806414, nhóm 01, tổ 02. Nếu lịch cũ chỉ ghi nhóm mà không xác định được tổ, lịch đã lưu được giữ lại để người dùng kiểm tra và chọn lại tổ.
 
 ## Getting Started
 

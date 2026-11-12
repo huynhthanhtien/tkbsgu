@@ -178,6 +178,10 @@ export default function SchedulePlanner() {
 
   // Bổ sung: Chọn lớp từ sidebar bằng click
   function handleSidebarClassClick(subject: any, cls: ClassInfo) {
+    if (!cls.schedules.length) {
+      toast.warning("Lớp chưa có lịch học, chưa thể xếp vào thời khóa biểu.");
+      return;
+    }
     // Nếu đã chọn lớp này rồi thì không làm gì
     const isAlreadySelected = Object.values(schedule).some(
       (item) => item.subjectId === subject.id && item.classId === cls.id
@@ -472,7 +476,7 @@ export default function SchedulePlanner() {
                   <div key={cls.id} className={`p-3 rounded border flex flex-col gap-1 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 ${colorClasses[cls.color as keyof typeof colorClasses]}`}
                     onClick={() => handleSelectClassFromModal(cls)}
                   >
-                    <div className="font-medium text-base">Lớp {cls.id.split("-")[1]} - {cls.id}</div>
+                    <div className="font-medium text-base">Nhóm {cls.id.split("-").slice(1).join(" · Tổ ")} - {cls.id}</div>
                     <div className="text-xs text-gray-600 dark:text-gray-300">Giáo viên: {cls.schedules[0]?.teacher || "-"} | Phòng: {cls.schedules[0]?.room || "-"}</div>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {cls.schedules.map((sch, idx) => (
@@ -585,7 +589,7 @@ export default function SchedulePlanner() {
                                   title="Nhấn để chọn lớp này cho thời khóa biểu"
                                 >
                                   <div className="font-medium mb-1">
-                                    Nhóm tổ {cls.id.split("-")[1]} - {cls.id}
+                                    Nhóm {cls.id.split("-").slice(1).join(" · Tổ ")} - {cls.id}
                                   </div>
                                   <ClassCapacity id={cls.id} />
                                   <div className="flex items-center gap-1.5 text-xs opacity-90 mb-1">
@@ -835,13 +839,13 @@ export default function SchedulePlanner() {
                                       const cls = matchingClasses[0]
                                       return (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                                          <div className={`text-xs font-medium ${colorClassesText[cls.color as keyof typeof colorClassesText]}`}>Lớp {cls.id.split("-")[1]}</div>
+                                          <div className={`text-xs font-medium ${colorClassesText[cls.color as keyof typeof colorClassesText]}`}>Nhóm {cls.id.split("-").slice(1).join(" · Tổ ")}</div>
                                           <div className={`text-xs ${colorClassesText[cls.color as keyof typeof colorClassesText]} opacity-80`}>{cls.schedules[0]?.room ? `phòng ${cls.schedules[0].room}` : "phòng"}</div>
                                         </div>
                                       )
                                     } else if (matchingClasses.length > 1) {
                                       // Lấy danh sách tên lớp (Lớp 8 | Lớp 10)
-                                      const classNames = matchingClasses.map(cls => `Lớp ${cls.id.split("-")[1]}`).join(" | ")
+                                      const classNames = matchingClasses.map(cls => `Nhóm ${cls.id.split("-").slice(1).join(" · Tổ ")}`).join(" | ")
                                       return (
                                         <div className="absolute inset-0 flex items-center justify-center">
                                           <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
@@ -935,13 +939,13 @@ export default function SchedulePlanner() {
                                       const cls = matchingClasses[0]
                                       return (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
-                                          <div className={`text-xs font-medium ${colorClassesText[cls.color as keyof typeof colorClassesText]}`}>Lớp {cls.id.split("-")[1]}</div>
+                                          <div className={`text-xs font-medium ${colorClassesText[cls.color as keyof typeof colorClassesText]}`}>Nhóm {cls.id.split("-").slice(1).join(" · Tổ ")}</div>
                                           <div className={`text-xs ${colorClassesText[cls.color as keyof typeof colorClassesText]} opacity-80`}>{cls.schedules[0]?.room ? `phòng ${cls.schedules[0].room}` : "phòng"}</div>
                                         </div>
                                       )
                                     } else if (matchingClasses.length > 1) {
                                       // Lấy danh sách tên lớp (Lớp 8 | Lớp 10)
-                                      const classNames = matchingClasses.map(cls => `Lớp ${cls.id.split("-")[1]}`).join(" | ")
+                                      const classNames = matchingClasses.map(cls => `Nhóm ${cls.id.split("-").slice(1).join(" · Tổ ")}`).join(" | ")
                                       return (
                                         <div className="absolute inset-0 flex items-center justify-center">
                                           <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">

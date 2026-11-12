@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button"
 
 import { ScheduleItem } from "@/components/types";
-import rawData from "@/public/data.json"; // ⚠️ Đặt file JSON trong `src/data/`, không phải `public/`
+import data from "@/public/data.json";
+const rawData = data.mon_hoc;
 import { Toaster, toast } from "sonner"
 import { start } from 'repl';
 
@@ -72,7 +73,8 @@ function parseTKB(tkb: any[], monHoc: any, nhom_to: string, index: number): Sche
 }
 
 function get_info_class(key: string, index: number): ScheduleJson[] | null {
-    const [ma_mon, nhom_to] = key.split("-");
+    const [ma_mon, ...groupParts] = key.split("-");
+    const nhom_to = groupParts.join("-");
 
     const mon = rawData.find((item) => item.ma_mon === ma_mon);
     if (!mon) {
